@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    // heatmap colors
+    <color name="heatmap_color_1">#D4EDDA</color>
+    <color name="heatmap_color_2">#A3D9B1</color>
+    <color name="heatmap_color_3">#5CB85C</color>
+    <color name="heatmap_color_4">#3D8B37</color>
+
+    // ui color constants
     <color name="inactive_text_color">#BEBEBE</color>
+    <color name="active_text_color">#FFFFFF</color>
+    <color name="header_text_color">#fff</color>
+    <color name="background_color">#0B090A</color>
+
+
 </resources>

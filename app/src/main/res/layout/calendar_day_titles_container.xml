@@ -1,11 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/monthHeaderText"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:padding="8dp"
-    android:textColor="@android:color/black"
-    android:textSize="18sp"
-    android:textStyle="bold" />
+    android:layout_height="wrap_content">
+
+    <TextView
+
+        android:id="@+id/monthHeaderText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="@color/header_text_color"
+        android:textSize="22sp"
+        android:text="February 2021"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/daysOfWeekContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingVertical="5dp">
+
+        <!-- Placeholder for days of the week (e.g., Sun, Mon, Tue) -->
+    </LinearLayout>
+</LinearLayout>
+

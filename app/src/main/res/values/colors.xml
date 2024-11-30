@@ -48,5 +48,17 @@
     <color name="example_7_white">#D9FFFFFF</color>
     <color name="example_7_yellow">#FFEB3B</color>
     <color name="example_1_selection_color">#FCCA3E</color>
+
+    // heatmap colors
+    <color name="heatmap_color_1">#D4EDDA</color>
+    <color name="heatmap_color_2">#A3D9B1</color>
+    <color name="heatmap_color_3">#5CB85C</color>
+    <color name="heatmap_color_4">#3D8B37</color>
+
+
+    // ui color constants
     <color name="inactive_text_color">#BEBEBE</color>
+    <color name="active_text_color">#000000</color>
+    <color name="header_text_color">#000</color>
+    <color name="background_color">#F1F9F8</color>
 </resources>
