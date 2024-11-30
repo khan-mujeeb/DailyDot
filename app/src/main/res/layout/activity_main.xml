@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,11 +10,36 @@
     tools:context=".MainActivity">
 
     <com.kizitonwose.calendar.view.CalendarView
+        android:layout_alignParentTop="true"
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cv_monthHeaderResource="@layout/calendar_day_titles_container"
         app:cv_dayViewResource="@layout/calendar_day_layout" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/habitRcView"
+        android:layout_marginTop="40dp"
+        android:layout_below="@id/calendarView"
+        tools:listitem="@layout/habit_list_item"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
-</LinearLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingAddButton"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="50dp"
+        android:layout_marginEnd="10dp"
+        android:backgroundTint="@color/example_4_green"
+        android:src="@drawable/baseline_add_24"
+        app:borderWidth="0dp"
+        app:tint="@color/active_text_color"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/todo" />
+
+
+</RelativeLayout>

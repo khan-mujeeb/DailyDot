@@ -7,7 +7,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.dailydot.adapter.DayViewContainer
+import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.adapter.MonthViewContainer
+import com.example.dailydot.data.DummyData.habbit
 import com.example.dailydot.data.DummyData.habitDataList
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.kizitonwose.calendar.core.CalendarDay
@@ -30,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
+        subscribeUI()
         val currentMonth = YearMonth.now()
         binding.calendarView.setup(
             currentMonth.minusMonths(1),
@@ -120,6 +123,10 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+    }
+
+    private fun subscribeUI() {
+        binding.habitRcView.adapter = HabitAdapter(habbit)
     }
 }
 

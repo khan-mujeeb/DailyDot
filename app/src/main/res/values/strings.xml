@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Dailydot</string>
+    <string name="todo">TODO</string>
+    <string name="reading">Reading</string>
 </resources>

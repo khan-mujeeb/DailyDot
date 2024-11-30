@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="10dp"
+
+    android:backgroundTint="@color/foreground_color"
+    android:layout_marginBottom="10dp"
+    android:layout_height="70dp">
+
+    <LinearLayout
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <CheckBox
+            android:id="@+id/habitCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/habitTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textColor="@color/active_text_color"
+            android:text="@string/reading"
+            android:layout_marginStart="15dp"/>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

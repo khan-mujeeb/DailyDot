@@ -12,6 +12,7 @@
     <color name="active_text_color">#FFFFFF</color>
     <color name="header_text_color">#fff</color>
     <color name="background_color">#0B090A</color>
+    <color name="foreground_color">#1A1A1A</color>
 
 
 </resources>

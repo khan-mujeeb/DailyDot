@@ -21,4 +21,11 @@ object DummyData {
         HabitData(5, "Meditation", true, LocalDate.of(2024, 12, 6)),
     )
 
+    val habbit = listOf(
+        "Exercise",
+        "Meditation",
+        "Reading",
+        "Coding"
+    )
+
 }
