@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
 }
 
 android {
@@ -44,6 +45,15 @@ dependencies {
     // calender library
     implementation("com.kizitonwose.calendar:view:2.6.0")
     implementation("com.kizitonwose.calendar:core:2.6.0")
+
+    // Room database
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
+
+    // viewmodel
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+
 
 
     implementation("androidx.core:core-ktx:1.15.0")

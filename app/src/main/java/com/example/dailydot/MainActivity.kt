@@ -31,13 +31,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         subscribeUI()
+        subscribeOnClickListner()
+
         val currentMonth = YearMonth.now()
+
+        // Make sure to set the correct start day for the calendar
         binding.calendarView.setup(
-            currentMonth.minusMonths(1),
-            currentMonth.plusMonths(1),
-            DayOfWeek.SUNDAY
+            currentMonth.minusMonths(12), // Previous month
+            currentMonth.plusMonths(0),   // Next month
+            DayOfWeek.MONDAY              // Starting day of the week as Monday
         )
         binding.calendarView.scrollToMonth(currentMonth)
 
@@ -50,14 +53,14 @@ class MainActivity : AppCompatActivity() {
                     return MonthViewContainer(view)
                 }
 
-                override fun bind(container: MonthViewContainer, month: CalendarMonth) {
+                override fun bind(container: MonthViewContainer, data: CalendarMonth) {
                     // Set the month and year
                     val monthName =
-                        month.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
-                    val year = month.yearMonth.year
+                        data.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                    val year = data.yearMonth.year
                     container.textView.text = "$monthName $year" // e.g., "November 2024"
 
-                    // Add days of the week to the header
+                    // Add days of the week to the header (Sunday to Saturday)
                     val daysOfWeek = DayOfWeek.values() // Sunday to Saturday
                     container.daysOfWeekContainer.removeAllViews() // Clear any existing views
 
@@ -79,17 +82,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-
-        binding.calendarView.setup(
-            currentMonth.minusMonths(12),
-            currentMonth.plusMonths(12),
-            DayOfWeek.SUNDAY
-        )
-        binding.calendarView.scrollToMonth(currentMonth)
-
-
         binding.calendarView.dayBinder = object : MonthDayBinder<DayViewContainer> {
             override fun create(view: View) = DayViewContainer(view)
+
             override fun bind(container: DayViewContainer, data: CalendarDay) {
                 val textView = container.textView
                 textView.text = data.date.dayOfMonth.toString()
@@ -100,13 +95,12 @@ class MainActivity : AppCompatActivity() {
                     container.textView.setTextColor(getColor(R.color.inactive_text_color))
                 }
 
-                // Check habit status
+                // Check habit status and map background resources
                 val habitData = habitStatusMap[data.date]
 
-                // Determine the background based on the number of completed activities
                 val completedActivities = habitDataList
-                    .filter { it.date == data.date && it.status } // Filter activities for this date and completed
-                    .size // Count completed activities
+                    .filter { it.date == data.date && it.status }
+                    .size
 
                 val backgroundResource = when (completedActivities) {
                     0 -> R.drawable.heatmap_bg0 // No activities
@@ -118,13 +112,19 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 textView.setBackgroundResource(backgroundResource)
-
             }
         }
-
-
     }
 
+
+
+    private fun subscribeOnClickListner() {
+
+        binding.floatingAddButton.setOnClickListener {
+            // Open the add habit activity
+        }
+
+    }
     private fun subscribeUI() {
         binding.habitRcView.adapter = HabitAdapter(habbit)
     }
