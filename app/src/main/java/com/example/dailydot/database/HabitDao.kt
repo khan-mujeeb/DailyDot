@@ -10,7 +10,7 @@ interface HabitDao {
     suspend fun insertHabit(habit: Habit)
 
     @Query("SELECT * FROM habit_table")
-    suspend fun getAllHabits(): List<Habit>
+    fun getAllHabits(): LiveData<List<Habit>>
 
     @Delete
     suspend fun deleteHabit(habit: Habit)

@@ -33,7 +33,7 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         }
     }
 
-    suspend fun getAllHabits(): List<Habit> {
+    suspend fun getAllHabits(): LiveData<List<Habit>> {
         return repository.getAllHabits()
     }
 }

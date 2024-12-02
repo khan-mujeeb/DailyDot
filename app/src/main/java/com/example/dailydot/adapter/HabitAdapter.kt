@@ -7,8 +7,9 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.dailydot.R
+import com.example.dailydot.data.Habit
 
-class HabitAdapter(private val habits: List<String>) : RecyclerView.Adapter<HabitAdapter.HabitViewHolder>() {
+class HabitAdapter(private val habits: List<Habit>) : RecyclerView.Adapter<HabitAdapter.HabitViewHolder>() {
 
     // ViewHolder class to bind the habit item layout
     class HabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -25,7 +26,7 @@ class HabitAdapter(private val habits: List<String>) : RecyclerView.Adapter<Habi
     override fun onBindViewHolder(holder: HabitViewHolder, position: Int) {
         // Bind the data for the current habit
         val habit = habits[position]
-        holder.habitTitle.text = habit
+        holder.habitTitle.text = habit.habitName
 
         // Handle checkbox state change
         holder.checkBox.setOnCheckedChangeListener { _, isChecked ->

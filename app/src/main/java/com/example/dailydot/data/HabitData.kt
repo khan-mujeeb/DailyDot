@@ -6,8 +6,10 @@ import java.time.LocalDate
 
 @Entity(tableName = "habit_tracking_table")
 data class HabitData(
-    val date: LocalDate,
+    @PrimaryKey(autoGenerate = true)
     val id: Int,
-    val habitStatus: List<HabitStatus>
+    val date: LocalDate,
+    val habitStatus: List<HabitStatus>,
+    val habitCompleted: Int
 )
 

@@ -1,13 +1,17 @@
 package com.example.dailydot.repository
 
+import android.app.Application
 import androidx.lifecycle.LiveData
 import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.database.HabitDao
 import com.example.dailydot.database.HabitDataDao
+import com.example.dailydot.database.HabitDatabase
 import java.time.LocalDate
 
-class HabitRepository(private val habitDao: HabitDao, private val habitDataDao: HabitDataDao) {
+class HabitRepository(application: Application) {
+
+    private val habitDao = HabitDatabase.getDatabase(application).habitDao()
 
 
 //    **********************************************************************************************
@@ -35,7 +39,7 @@ class HabitRepository(private val habitDao: HabitDao, private val habitDataDao: 
         habitDao.deleteHabit(habit)
     }
 
-    suspend fun getAllHabits(): List<Habit> {
+    suspend fun getAllHabits(): LiveData<List<Habit>> {
         return habitDao.getAllHabits()
     }
 }

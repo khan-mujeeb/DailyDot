@@ -1,5 +1,8 @@
 package com.example.dailydot.database
 
-class HabitDataDao {
+import androidx.room.Dao
+
+@Dao
+abstract class HabitDataDao {
 
 }
