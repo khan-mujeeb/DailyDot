@@ -1,6 +1,7 @@
 package com.example.dailydot
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -18,6 +19,7 @@ import com.example.dailydot.adapter.DayViewContainer
 import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.adapter.MonthViewContainer
 import com.example.dailydot.data.Habit
+import com.example.dailydot.data.OnBoardingData.getOnBoardingData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.repository.HabitRepository
 import com.example.dailydot.utils.Utils.generateRandomUID
@@ -28,6 +30,8 @@ import com.kizitonwose.calendar.core.CalendarMonth
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.view.MonthDayBinder
 import com.kizitonwose.calendar.view.MonthHeaderFooterBinder
+import com.xcode.onboarding.MaterialOnBoarding
+import com.xcode.onboarding.OnFinishLastPage
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.YearMonth
@@ -135,23 +139,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // Check habit status and map background resources
-//                val habitData = habitStatusMap[data.date]
-//
-//                val completedActivities = habitDataList
-//                    .filter { it.date == data.date && it.status }
-//                    .size
-
-//                val backgroundResource = when (completedActivities) {
-//                    0 -> R.drawable.heatmap_bg0 // No activities
-//                    1 -> R.drawable.heatmap_bg1 // 1 activity completed
-//                    2 -> R.drawable.heatmap_bg2 // 2 activities completed
-//                    3 -> R.drawable.heatmap_bg3 // 3 activities completed
-//                    4 -> R.drawable.heatmap_bg4 // 4 activities completed
-//                    else -> R.drawable.heatmap_bg4 // Default to max
-//                }
-
-//                textView.setBackgroundResource(backgroundResource)
             }
         }
     }
@@ -178,7 +165,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun subscribeUI() {
 
+        // Get all habits list from the database
         getHabitList()
+
+        // Set up onboarding / walkthrough screens
+        setUpOnboarding()
+    }
+
+    private fun setUpOnboarding() {
+        MaterialOnBoarding.setupOnBoarding(this, getOnBoardingData(), object : OnFinishLastPage {
+            // Handle what happens after the onboarding is finished
+            // For example, navigate to the main activity
+            override fun onNext() {
+                startActivity(Intent(this@MainActivity, MainActivity::class.java))
+                finish()
+            }
+
+        })
     }
 
     private fun getHabitList() {
@@ -234,5 +237,8 @@ class MainActivity : AppCompatActivity() {
 
         dialog.show()
     }
+
 }
+
+
 

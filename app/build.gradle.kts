@@ -42,6 +42,10 @@ android {
 
 dependencies {
 
+    // onboarding library
+    implementation ("com.github.ErrorxCode:ModernOnboarding:v1.5")
+
+
     // calender library
     implementation("com.kizitonwose.calendar:view:2.6.0")
     implementation("com.kizitonwose.calendar:core:2.6.0")
