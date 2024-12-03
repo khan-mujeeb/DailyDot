@@ -10,6 +10,6 @@ data class HabitData(
     val id: Int,
     val date: LocalDate,
     val habitStatus: List<HabitStatus>,
-    val habitCompleted: Int
+    val habitCompleted: Int = 0
 )
 

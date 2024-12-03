@@ -5,11 +5,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.TextView
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.example.dailydot.R
 import com.example.dailydot.data.Habit
+import com.example.dailydot.data.HabitData
+import com.example.dailydot.data.HabitStatus
+import com.example.dailydot.utils.Callback
+import com.example.dailydot.viewmodel.HabitViewModel
+import java.time.LocalDate
 
-class HabitAdapter(private val habits: List<Habit>) : RecyclerView.Adapter<HabitAdapter.HabitViewHolder>() {
+class HabitAdapter(private val lifecycleOwner: LifecycleOwner, private val habits: List<Habit>, private val viewModel: HabitViewModel) : RecyclerView.Adapter<HabitAdapter.HabitViewHolder>() {
 
     // ViewHolder class to bind the habit item layout
     class HabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -24,20 +31,77 @@ class HabitAdapter(private val habits: List<Habit>) : RecyclerView.Adapter<Habit
     }
 
     override fun onBindViewHolder(holder: HabitViewHolder, position: Int) {
-        // Bind the data for the current habit
         val habit = habits[position]
         holder.habitTitle.text = habit.habitName
 
-        // Handle checkbox state change
-        holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
-            // You can perform actions when the checkbox is checked/unchecked
-            // For example, updating the status of the habit in your data model
-            if (isChecked) {
-                // Habit marked as completed
-            } else {
-                // Habit marked as not completed
+        // Fetch and bind data
+        viewModel.getHabitsByDate(LocalDate.now(), object : Callback<LiveData<HabitData>> {
+            override fun onResult(result: LiveData<HabitData>?) {
+
+                result!!.observe(lifecycleOwner) { habitData ->
+                    // Update checkbox state based on the habit status
+                    val isCompleted = habitData?.habitStatus?.any { it.uid == habit.uid } == true
+                    holder.checkBox.isChecked = isCompleted
+
+                    // Set listener for checkbox click
+                    holder.checkBox.setOnClickListener {
+
+                        when {
+                            holder.checkBox.isChecked && habitData == null -> {
+                                // Insert new habit data when no record exists for today
+                                viewModel.insertHabitData(
+                                    HabitData(
+                                        id = 0,
+                                        date = LocalDate.now(),
+                                        habitStatus = mutableListOf(HabitStatus(habit.uid, habit.habitName, true)),
+                                        habitCompleted = 1
+                                    )
+                                )
+                            }
+                            holder.checkBox.isChecked -> {
+                                // Add to completed list
+                                addHabitToCompleted(habit, habitData)
+                            }
+                            else -> {
+                                // Remove from completed list
+                                removeHabitFromCompleted(habit, habitData)
+                            }
+                        }
+                    }
+                }
+
             }
+        })
+    }
+
+    private fun addHabitToCompleted(habit: Habit, result: HabitData?) {
+        val updatedStatus = result?.habitStatus?.toMutableList() ?: mutableListOf()
+        if (updatedStatus.none { it.uid == habit.uid }) {
+            updatedStatus.add(HabitStatus(habit.uid, habit.habitName, true))
         }
+
+
+        viewModel.updateHabitData(
+            LocalDate.now(),
+            updatedStatus,
+            (result?.habitCompleted ?: 0) + 1
+        )
+
+    }
+
+    private fun removeHabitFromCompleted(habit: Habit, result: HabitData?) {
+        val updatedStatus = result?.habitStatus?.toMutableList() ?: mutableListOf()
+        val habitToRemove = updatedStatus.find { it.uid == habit.uid }
+        if (habitToRemove != null) {
+            updatedStatus.remove(habitToRemove)
+        }
+
+        viewModel.updateHabitData(
+            LocalDate.now(),
+            updatedStatus,
+            (result?.habitCompleted ?: 1) - 1
+        )
+
     }
 
     override fun getItemCount(): Int {

@@ -111,6 +111,30 @@ class MainActivity : AppCompatActivity() {
                     container.textView.setTextColor(getColor(R.color.inactive_text_color))
                 }
 
+
+                lifecycleScope.launch {
+                    viewModel.getAllHabitTrackingData().observe(this@MainActivity) { habitDataList ->
+
+                        if (habitDataList.isNotEmpty()) {
+                            val habitData = habitDataList.find { it.date == data.date }
+
+                            if (habitData != null) {
+
+                                val backgroundResource = when (habitData.habitCompleted) {
+                                    0 -> R.drawable.heatmap_bg0 // No activities
+                                    1 -> R.drawable.heatmap_bg1 // 1 activity completed
+                                    2 -> R.drawable.heatmap_bg2 // 2 activities completed
+                                    3 -> R.drawable.heatmap_bg3 // 3 activities completed
+                                    4 -> R.drawable.heatmap_bg4 // 4 activities completed
+                                    else -> R.drawable.heatmap_bg4 // Default to max
+                                }
+
+                                textView.setBackgroundResource(backgroundResource)
+                            }
+                        }
+                    }
+                }
+
                 // Check habit status and map background resources
 //                val habitData = habitStatusMap[data.date]
 //
@@ -162,7 +186,11 @@ class MainActivity : AppCompatActivity() {
 
             viewModel.getAllHabits().observe(this@MainActivity) {
                 if (it.isNotEmpty()) {
-                    binding.habitRcView.adapter = HabitAdapter(it)
+                    binding.habitRcView.adapter = HabitAdapter(
+                        lifecycleOwner = this@MainActivity,
+                        habits = it,
+                        viewModel = viewModel
+                    )
                 }
 
                 habitFlag = it.size
