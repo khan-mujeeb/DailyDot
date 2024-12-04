@@ -6,17 +6,22 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.example.dailydot.R
 import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.data.HabitStatus
-import com.example.dailydot.utils.Callback
 import com.example.dailydot.viewmodel.HabitViewModel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-class HabitAdapter(private val lifecycleOwner: LifecycleOwner, private val habits: List<Habit>, private val viewModel: HabitViewModel) : RecyclerView.Adapter<HabitAdapter.HabitViewHolder>() {
+class HabitAdapter(
+    private val lifecycleOwner: LifecycleOwner,
+    private val habits: List<Habit>,
+    private val viewModel: HabitViewModel
+) : RecyclerView.Adapter<HabitAdapter.HabitViewHolder>() {
 
     // ViewHolder class to bind the habit item layout
     class HabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -26,7 +31,8 @@ class HabitAdapter(private val lifecycleOwner: LifecycleOwner, private val habit
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HabitViewHolder {
         // Inflate the habit_list_item layout
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.habit_list_item, parent, false)
+        val view =
+            LayoutInflater.from(parent.context).inflate(R.layout.habit_list_item, parent, false)
         return HabitViewHolder(view)
     }
 
@@ -35,43 +41,53 @@ class HabitAdapter(private val lifecycleOwner: LifecycleOwner, private val habit
         holder.habitTitle.text = habit.habitName
 
         // Fetch and bind data
-        viewModel.getHabitsByDate(LocalDate.now(), object : Callback<LiveData<HabitData>> {
-            override fun onResult(result: LiveData<HabitData>?) {
+        lifecycleOwner.lifecycleScope.launch {
 
-                result!!.observe(lifecycleOwner) { habitData ->
-                    // Update checkbox state based on the habit status
-                    val isCompleted = habitData?.habitStatus?.any { it.uid == habit.uid } == true
-                    holder.checkBox.isChecked = isCompleted
+            viewModel.getHabitsByDate(LocalDate.now()).observe(lifecycleOwner) { habitData ->
 
-                    // Set listener for checkbox click
-                    holder.checkBox.setOnClickListener {
+                // Update checkbox state based on the habit status
+                val isCompleted = habitData?.habitStatus?.any { it.uid == habit.uid } == true
+                holder.checkBox.isChecked = isCompleted
 
-                        when {
-                            holder.checkBox.isChecked && habitData == null -> {
-                                // Insert new habit data when no record exists for today
-                                viewModel.insertHabitData(
-                                    HabitData(
-                                        id = 0,
-                                        date = LocalDate.now(),
-                                        habitStatus = mutableListOf(HabitStatus(habit.uid, habit.habitName, true)),
-                                        habitCompleted = 1
-                                    )
+                // Set listener for checkbox click
+                holder.checkBox.setOnClickListener {
+
+                    when {
+                        holder.checkBox.isChecked && habitData == null -> {
+
+                            // Insert new habit data when no record exists for today
+                            viewModel.insertHabitData(
+                                HabitData(
+                                    id = 0,
+                                    date = LocalDate.now(),
+                                    habitStatus = mutableListOf(
+                                        HabitStatus(
+                                            habit.uid,
+                                            habit.habitName,
+                                            true
+                                        )
+                                    ),
+                                    habitCompleted = 1
                                 )
-                            }
-                            holder.checkBox.isChecked -> {
-                                // Add to completed list
-                                addHabitToCompleted(habit, habitData)
-                            }
-                            else -> {
-                                // Remove from completed list
-                                removeHabitFromCompleted(habit, habitData)
-                            }
+                            )
+                        }
+
+                        holder.checkBox.isChecked -> {
+                            // Add to completed list
+                            addHabitToCompleted(habit, habitData)
+                        }
+
+                        else -> {
+                            // Remove from completed list
+                            removeHabitFromCompleted(habit, habitData)
                         }
                     }
                 }
 
+
             }
-        })
+
+        }
     }
 
     private fun addHabitToCompleted(habit: Habit, result: HabitData?) {

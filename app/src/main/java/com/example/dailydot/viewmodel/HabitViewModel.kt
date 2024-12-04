@@ -35,14 +35,10 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         }
     }
 
-    fun getHabitsByDate(date: LocalDate, callback: Callback<LiveData<HabitData>>) {
+    suspend fun getHabitsByDate(date: LocalDate): LiveData<HabitData> {
 
-        CoroutineScope(Dispatchers.IO).launch {
 
-            withContext(Dispatchers.Main) {
-                callback.onResult(repository.getHabitsByDate(date))
-            }
-        }
+        return repository.getHabitsByDate(date)
     }
 
 
