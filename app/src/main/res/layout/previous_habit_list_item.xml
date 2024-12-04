@@ -10,14 +10,14 @@
 
     <LinearLayout
         android:gravity="center_vertical"
-        android:paddingHorizontal="20dp"
+        android:paddingHorizontal="32dp"
         android:layout_gravity="center"
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <CheckBox
-
-            android:id="@+id/habitCheckBox"
+        <ImageView
+            android:src="@drawable/baseline_check_box_24"
+            android:id="@+id/habitStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
@@ -29,8 +29,7 @@
             android:textColor="@color/active_text_color"
             android:text="@string/reading"
             android:lines="1"
-
-            android:layout_marginStart="15dp"/>
+            android:layout_marginStart="27dp"/>
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

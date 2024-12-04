@@ -1,28 +1,28 @@
 package com.example.dailydot
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.dailydot.adapter.DayViewContainer
 import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.adapter.MonthViewContainer
-import com.example.dailydot.data.Habit
+import com.example.dailydot.adapter.PastHabitAdapter
+import com.example.dailydot.data.HabitData
 import com.example.dailydot.data.OnBoardingData.getOnBoardingData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.repository.HabitRepository
-import com.example.dailydot.utils.Utils.generateRandomUID
+import com.example.dailydot.utils.Callback
+import com.example.dailydot.utils.Utils.getHabitCompletionImageResource
+import com.example.dailydot.utils.Utils.showAddHabitDialog
 import com.example.dailydot.viewmodel.HabitViewModel
 import com.example.dailydot.viewmodel.HabitViewModelFactory
 import com.kizitonwose.calendar.core.CalendarDay
@@ -34,6 +34,7 @@ import com.xcode.onboarding.MaterialOnBoarding
 import com.xcode.onboarding.OnFinishLastPage
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
@@ -42,203 +43,167 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: HabitViewModel
-    private var habitFlag: Int = 0
-
+    private var habitFlag = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        variableInitialization()
-        subscribeUI()
-        subscribeOnClickListner()
+        initializeVariables()
+        setupUI()
+        setupCalendar()
+        setupOnboarding()
+    }
 
+    private fun initializeVariables() {
+        val repository = HabitRepository(application)
+        val factory = HabitViewModelFactory(repository)
+        viewModel = ViewModelProvider(this, factory)[HabitViewModel::class.java]
+    }
+
+    private fun setupUI() {
+        setupHabitListObserver()
+
+        binding.floatingAddButton.setOnClickListener {
+            if (habitFlag >= 4) {
+                Toast.makeText(this, "You can only add 4 habits", Toast.LENGTH_SHORT).show()
+            } else {
+                showAddHabitDialog(this, viewModel)
+            }
+        }
+    }
+
+    private fun setupCalendar() {
         val currentMonth = YearMonth.now()
-
-        // Make sure to set the correct start day for the calendar
         binding.calendarView.setup(
-            currentMonth.minusMonths(12), // Previous month
-            currentMonth.plusMonths(0),   // Next month
-            DayOfWeek.MONDAY              // Starting day of the week as Monday
+            currentMonth.minusMonths(12),
+            currentMonth,
+            DayOfWeek.MONDAY
         )
         binding.calendarView.scrollToMonth(currentMonth)
 
-        // Map habit data to dates
-//        val habitStatusMap = habitDataList.associateBy { it.date }
+        setupMonthHeaderBinder()
+        setupDayBinder()
+    }
 
-        binding.calendarView.monthHeaderBinder =
-            object : MonthHeaderFooterBinder<MonthViewContainer> {
-                override fun create(view: View): MonthViewContainer {
-                    return MonthViewContainer(view)
-                }
+    private fun setupMonthHeaderBinder() {
+        binding.calendarView.monthHeaderBinder = object : MonthHeaderFooterBinder<MonthViewContainer> {
+            override fun create(view: View): MonthViewContainer = MonthViewContainer(view)
 
-                override fun bind(container: MonthViewContainer, data: CalendarMonth) {
-                    // Set the month and year
-                    val monthName =
-                        data.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
-                    val year = data.yearMonth.year
-                    container.textView.text = "$monthName $year" // e.g., "November 2024"
-
-                    // Add days of the week to the header (Sunday to Saturday)
-                    val daysOfWeek = DayOfWeek.values() // Sunday to Saturday
-                    container.daysOfWeekContainer.removeAllViews() // Clear any existing views
-
-                    for (day in daysOfWeek) {
-                        val dayTextView = TextView(container.daysOfWeekContainer.context).apply {
-                            text = day.getDisplayName(
-                                TextStyle.SHORT,
-                                Locale.getDefault()
-                            ) // e.g., Sun, Mon
-                            textSize = 12f
-                            setTextColor(Color.GRAY)
-                            gravity = android.view.Gravity.CENTER
-                            layoutParams = LinearLayout.LayoutParams(
-                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
-                            )
-                        }
-                        container.daysOfWeekContainer.addView(dayTextView)
-                    }
-                }
+            override fun bind(container: MonthViewContainer, data: CalendarMonth) {
+                container.textView.text = "${data.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${data.yearMonth.year}"
+                setupDaysOfWeek(container.daysOfWeekContainer)
             }
+        }
+    }
 
+    private fun setupDaysOfWeek(container: LinearLayout) {
+        container.removeAllViews()
+        DayOfWeek.values().forEach { day ->
+            val dayTextView = TextView(container.context).apply {
+                text = day.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                textSize = 12f
+                setTextColor(Color.GRAY)
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            container.addView(dayTextView)
+        }
+    }
+
+    private fun setupDayBinder() {
         binding.calendarView.dayBinder = object : MonthDayBinder<DayViewContainer> {
             override fun create(view: View) = DayViewContainer(view)
 
             override fun bind(container: DayViewContainer, data: CalendarDay) {
-                val textView = container.textView
-                textView.text = data.date.dayOfMonth.toString()
+                container.textView.apply {
+                    text = data.date.dayOfMonth.toString()
+                    setTextColor(getColor(if (data.position == DayPosition.MonthDate) R.color.active_text_color else R.color.inactive_text_color))
 
-                if (data.position == DayPosition.MonthDate) {
-                    container.textView.setTextColor(getColor(R.color.active_text_color))
-                } else {
-                    container.textView.setTextColor(getColor(R.color.inactive_text_color))
-                }
-
-
-                lifecycleScope.launch {
-                    viewModel.getAllHabitTrackingData().observe(this@MainActivity) { habitDataList ->
-
-                        if (habitDataList.isNotEmpty()) {
-                            val habitData = habitDataList.find { it.date == data.date }
-
-                            if (habitData != null) {
-
-                                val backgroundResource = when (habitData.habitCompleted) {
-                                    0 -> R.drawable.heatmap_bg0 // No activities
-                                    1 -> R.drawable.heatmap_bg1 // 1 activity completed
-                                    2 -> R.drawable.heatmap_bg2 // 2 activities completed
-                                    3 -> R.drawable.heatmap_bg3 // 3 activities completed
-                                    4 -> R.drawable.heatmap_bg4 // 4 activities completed
-                                    else -> R.drawable.heatmap_bg4 // Default to max
-                                }
-
-                                textView.setBackgroundResource(backgroundResource)
-                            }
+                    // Set click listener for each date
+                    setOnClickListener {
+                        if (data.position == DayPosition.MonthDate &&  data.date <= LocalDate.now()) {
+                            onDateClicked(data)
+                        } else {
+                            Toast.makeText(context, "Invalid date selection", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
-
+                observeHabitTracking(container, data)
             }
         }
     }
 
-    private fun variableInitialization() {
-        val repository = HabitRepository(application)
-        val factory = HabitViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory)[HabitViewModel::class.java]
+
+    private fun onDateClicked(data: CalendarDay) {
+        // Handle date click action
+        val selectedDate = data.date
+
+        loadHabitsForSelectedDate(selectedDate)
 
     }
 
-
-    private fun subscribeOnClickListner() {
-
-        binding.floatingAddButton.setOnClickListener {
-            if(habitFlag == 4) {
-                Toast.makeText(this, "You can only add 4 habits", Toast.LENGTH_SHORT).show()
-            } else {
-                showAddHabitDialog()
-            }
-        }
-
-    }
-
-    private fun subscribeUI() {
-
-        // Get all habits list from the database
-        getHabitList()
-
-        // Set up onboarding / walkthrough screens
-        setUpOnboarding()
-    }
-
-    private fun setUpOnboarding() {
-        MaterialOnBoarding.setupOnBoarding(this, getOnBoardingData(), object : OnFinishLastPage {
-            // Handle what happens after the onboarding is finished
-            // For example, navigate to the main activity
-            override fun onNext() {
-                startActivity(Intent(this@MainActivity, MainActivity::class.java))
-                finish()
+    private fun loadHabitsForSelectedDate(selectedDate: LocalDate) {
+        viewModel.getHabitsByDate(selectedDate, object: Callback<LiveData<HabitData>> {
+            override fun onResult(result: LiveData<HabitData>?) {
+                result?.observe(this@MainActivity) { habitData ->
+                    if (selectedDate == LocalDate.now()) {
+                        setupHabitListObserver()
+                    } else {
+                        if(habitData != null) {
+                            binding.habitRcView.adapter = PastHabitAdapter(habitData.habitStatus)
+                        } else {
+                            binding.habitRcView.adapter = null
+                            Toast.makeText(this@MainActivity, "No data available for the selected date", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
 
         })
     }
 
-    private fun getHabitList() {
-        lifecycleScope.launch {
 
-            viewModel.getAllHabits().observe(this@MainActivity) {
-                if (it.isNotEmpty()) {
+
+    // **************** set habit resource based on of habit completed or not *********************
+    private fun observeHabitTracking(container: DayViewContainer, data: CalendarDay) {
+        lifecycleScope.launch {
+            viewModel.getAllHabitTrackingData().observe(this@MainActivity) { habitDataList ->
+                val habitData = habitDataList.find { it.date == data.date }
+                container.textView.setBackgroundResource(
+                    habitData?.let { getHabitCompletionImageResource(it.habitCompleted) }
+                        ?: 0 // Default background if no habit data is found
+                )
+            }
+        }
+    }
+
+
+    //********************************* fetch Habit list from db  ********************************
+
+    private fun setupHabitListObserver() {
+        lifecycleScope.launch {
+            viewModel.getAllHabits().observe(this@MainActivity) { habits ->
+                habits?.let {
                     binding.habitRcView.adapter = HabitAdapter(
                         lifecycleOwner = this@MainActivity,
                         habits = it,
                         viewModel = viewModel
                     )
+                    habitFlag = it.size
                 }
-
-                habitFlag = it.size
             }
-
-
         }
     }
 
-    @SuppressLint("MissingInflatedId")
-    private fun showAddHabitDialog() {
-        // Inflate the dialog layout
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_habit, null)
-        val etHabitName = dialogView.findViewById<EditText>(R.id.etHabitName)
-        val btnAddHabit = dialogView.findViewById<Button>(R.id.btnAddHabit)
-
-        // Create and show the dialog
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
-
-        btnAddHabit.setOnClickListener {
-            val habitName = etHabitName.text.toString().trim()
-
-            if (habitName.isNotEmpty()) {
-
-                // Add the habit to the database using ViewModel
-                val newHabit = Habit(
-                    uid = generateRandomUID(habitName),
-                    habitName = habitName
-                )
-
-                viewModel.insertHabit(newHabit)
-
-                // Dismiss the dialog
-                dialog.dismiss()
-            } else {
-                etHabitName.error = "Habit name cannot be empty"
+    //********************************* on boarding screens for first time user ********************************
+    private fun setupOnboarding() {
+        MaterialOnBoarding.setupOnBoarding(this, getOnBoardingData(), object : OnFinishLastPage {
+            override fun onNext() {
+                startActivity(Intent(this@MainActivity, MainActivity::class.java))
+                finish()
             }
-        }
-
-        dialog.show()
+        })
     }
-
 }
-
-
-
