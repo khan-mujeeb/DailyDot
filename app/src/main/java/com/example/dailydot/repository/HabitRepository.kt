@@ -5,8 +5,6 @@ import androidx.lifecycle.LiveData
 import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.data.HabitStatus
-import com.example.dailydot.database.HabitDao
-import com.example.dailydot.database.HabitDataDao
 import com.example.dailydot.database.HabitDatabase
 import java.time.LocalDate
 
@@ -19,10 +17,6 @@ class HabitRepository(application: Application) {
 //    **********************************************************************************************
 //                                          habit tracking  Data
 //    **********************************************************************************************
-//    fun getHabitsByDate(date: LocalDate): LiveData<List<HabitData>> {
-//        return habitDataDao.getHabitsByDate(date)
-//    }
-
 
     suspend fun insertHabitData(habitData: HabitData) {
         habitDataDao.insertHabitData(habitData)

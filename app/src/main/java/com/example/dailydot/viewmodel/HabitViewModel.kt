@@ -7,13 +7,8 @@ import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.data.HabitStatus
 import com.example.dailydot.repository.HabitRepository
-import com.example.dailydot.utils.Callback
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
-
 
 
 class HabitViewModel(private val repository: HabitRepository) : ViewModel() {

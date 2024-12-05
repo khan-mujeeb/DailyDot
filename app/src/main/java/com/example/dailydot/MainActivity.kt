@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                observeHabitTracking(container, data)
+                observeHabitTracking(container, data, container.textView)
             }
         }
     }
@@ -180,13 +180,18 @@ class MainActivity : AppCompatActivity() {
 
 
             // **************** set habit resource based on of habit completed or not *********************
-            private fun observeHabitTracking(container: DayViewContainer, data: CalendarDay) {
+            private fun observeHabitTracking(
+                container: DayViewContainer,
+                data: CalendarDay,
+                textView: TextView
+            ) {
+
                 lifecycleScope.launch {
                     viewModel.getAllHabitTrackingData()
                         .observe(this@MainActivity) { habitDataList ->
                             val habitData = habitDataList.find { it.date == data.date }
                             container.textView.setBackgroundResource(
-                                habitData?.let { getHabitCompletionImageResource(it.habitCompleted) }
+                                habitData?.let { getHabitCompletionImageResource(it.habitCompleted, textView) }
                                     ?: 0 // Default background if no habit data is found
                             )
                         }

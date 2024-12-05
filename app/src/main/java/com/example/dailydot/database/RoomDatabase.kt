@@ -9,7 +9,6 @@ import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.utils.HabitStatusConverter
 import com.example.dailydot.utils.LocalDateConverter
-import java.time.LocalDate
 
 @Database(entities = [Habit::class, HabitData::class], version = 1, exportSchema = false)
 @TypeConverters(LocalDateConverter::class, HabitStatusConverter::class)

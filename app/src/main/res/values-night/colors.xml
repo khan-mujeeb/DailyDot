@@ -8,11 +8,12 @@
     <color name="heatmap_color_4">#3D8B37</color>
 
     // ui color constants
-    <color name="inactive_text_color">#BEBEBE</color>
-    <color name="active_text_color">#FFFFFF</color>
+    <color name="inactive_text_color">#9ABEBEBE</color>
+    <color name="active_text_color">#E0E0E0</color>
     <color name="header_text_color">#fff</color>
     <color name="background_color">#0B090A</color>
     <color name="foreground_color">#1A1A1A</color>
 
+    <color name="date_text_resource">#000</color>
 
 </resources>

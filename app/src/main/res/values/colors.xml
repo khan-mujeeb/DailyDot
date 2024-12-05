@@ -62,4 +62,6 @@
     <color name="header_text_color">#000</color>
     <color name="background_color">#FDFFFC</color>
     <color name="foreground_color">#fff</color>
+
+    <color name="date_text_resource">#fff</color>
 </resources>
