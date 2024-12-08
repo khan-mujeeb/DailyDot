@@ -2,13 +2,18 @@ package com.example.dailydot.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.PopupWindow
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.example.dailydot.R
 import com.example.dailydot.data.Habit
+import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.viewmodel.HabitViewModel
 import java.util.UUID
 
@@ -58,7 +63,7 @@ object Utils {
     //                  This function will show a dialog to add a new habit
     // ******************************************************************************************
     @SuppressLint("MissingInflatedId")
-    public fun showAddHabitDialog(context: Context, viewModel: HabitViewModel) {
+    fun showAddHabitDialog(context: Context, viewModel: HabitViewModel) {
         // Inflate the dialog layout
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_habit, null)
         val etHabitName = dialogView.findViewById<EditText>(R.id.etHabitName)
@@ -91,4 +96,51 @@ object Utils {
 
         dialog.show()
     }
+
+
+    // ******************************************************************************************
+    //                  This function will show a dialog to edit and delete  a habit
+    // ******************************************************************************************
+
+    @SuppressLint("InflateParams", "MissingInflatedId")
+    fun showEditDeleteHabitPopup(
+        binding: ActivityMainBinding,
+        context: Context,
+        viewModel: HabitViewModel,
+        habit: Habit,
+        x: Float,
+        y: Float
+    ) {
+        // Inflate the dialog layout
+        val popupView = LayoutInflater.from(context).inflate(R.layout.threed_touch_popup, null)
+        val btnEditHabit = popupView.findViewById<TextView>(R.id.editTextBtn)
+        val btnDeleteHabit = popupView.findViewById<TextView>(R.id.deleteTextBtn)
+        val tvHabitName = popupView.findViewById<TextView>(R.id.tvHabitName)
+
+        tvHabitName.text = habit.habitName
+
+        // Create PopupWindow
+        val popupWindow = PopupWindow(
+            popupView,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        // Handle button clicks
+        btnEditHabit.setOnClickListener {
+            // Handle edit logic
+            popupWindow.dismiss()
+        }
+
+        btnDeleteHabit.setOnClickListener {
+            viewModel.deleteHabit(habit)
+            Toast.makeText(context, "Habit deleted", Toast.LENGTH_SHORT).show()
+            popupWindow.dismiss()
+        }
+
+        // Show the PopupWindow at the specified position
+        popupWindow.showAtLocation(binding.root, Gravity.NO_GRAVITY, x.toInt(), y.toInt())
+    }
+
 }

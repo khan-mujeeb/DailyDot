@@ -1,6 +1,9 @@
 package com.example.dailydot.adapter
 
+import android.annotation.SuppressLint
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
@@ -9,6 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.example.dailydot.R
+import com.example.dailydot.data.ActionType
 import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.data.HabitStatus
@@ -19,8 +23,10 @@ import java.time.LocalDate
 class HabitAdapter(
     private val lifecycleOwner: LifecycleOwner,
     private val habits: List<Habit>,
-    private val viewModel: HabitViewModel
+    private val viewModel: HabitViewModel,
+    private val onHabitAction: (Habit, ActionType, Float, Float) -> Unit
 ) : RecyclerView.Adapter<HabitAdapter.HabitViewHolder>() {
+
 
     // ViewHolder class to bind the habit item layout
     class HabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -35,9 +41,12 @@ class HabitAdapter(
         return HabitViewHolder(view)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: HabitViewHolder, position: Int) {
         val habit = habits[position]
         holder.habitTitle.text = habit.habitName
+        var touchX = 0f
+        var touchY = 0f
 
         // Fetch and bind data
         lifecycleOwner.lifecycleScope.launch {
@@ -47,6 +56,29 @@ class HabitAdapter(
                 // Update checkbox state based on the habit status
                 val isCompleted = habitData?.habitStatus?.any { it.uid == habit.uid } == true
                 holder.checkBox.isChecked = isCompleted
+
+                holder.itemView.setOnTouchListener { v, event ->
+                    if (event.action == MotionEvent.ACTION_DOWN) {
+                        // Store touch coordinates
+                        touchX = event.rawX
+                        touchY = event.rawY
+                    }
+                    false // Return false to allow other listeners like OnLongClickListener to work
+                }
+
+                holder.itemView.setOnLongClickListener {
+                    // Trigger haptic feedback on hover
+                    onHabitAction(
+                        habit,
+                        ActionType.EDIT,
+                        touchX,
+                        touchY
+                    )
+
+
+                    true
+                }
+
 
                 // Set listener for checkbox click
                 holder.checkBox.setOnClickListener {

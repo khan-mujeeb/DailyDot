@@ -2,4 +2,6 @@
     <string name="app_name">Dailydot</string>
     <string name="todo">TODO</string>
     <string name="reading">Reading</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
 </resources>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    app:cardCornerRadius="10dp"
+    android:backgroundTint="@color/foreground_color"
+    app:cardElevation="100dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+   <LinearLayout
+       android:paddingHorizontal="15dp"
+       android:paddingVertical="20dp"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:orientation="vertical">
+       <TextView
+            android:visibility="gone"
+           android:textSize="20sp"
+           android:textColor="@color/active_text_color"
+           android:id="@+id/tvHabitName"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="@string/edit"
+           android:drawablePadding="10dp"
+           />
+
+       <TextView
+
+           android:textSize="16sp"
+           android:textColor="@color/active_text_color"
+           android:id="@+id/editTextBtn"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="@string/edit"
+           android:drawablePadding="10dp"
+           app:drawableStartCompat="@drawable/baseline_mode_edit_outline_24" />
+       <TextView
+           android:layout_marginTop="10dp"
+           android:textSize="16sp"
+           android:textColor="@color/active_text_color"
+           android:id="@+id/deleteTextBtn"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="@string/delete"
+           android:drawablePadding="10dp"
+           app:drawableStartCompat="@drawable/baseline_delete_outline_24" />
+   </LinearLayout>
+
+
+</com.google.android.material.card.MaterialCardView>

@@ -15,11 +15,13 @@ import com.example.dailydot.adapter.DayViewContainer
 import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.adapter.MonthViewContainer
 import com.example.dailydot.adapter.PastHabitAdapter
+import com.example.dailydot.data.Habit
 import com.example.dailydot.data.OnBoardingData.getOnBoardingData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.repository.HabitRepository
 import com.example.dailydot.utils.Utils.getHabitCompletionImageResource
 import com.example.dailydot.utils.Utils.showAddHabitDialog
+import com.example.dailydot.utils.Utils.showEditDeleteHabitPopup
 import com.example.dailydot.viewmodel.HabitViewModel
 import com.example.dailydot.viewmodel.HabitViewModelFactory
 import com.kizitonwose.calendar.core.CalendarDay
@@ -49,8 +51,18 @@ class MainActivity : AppCompatActivity() {
 
         initializeVariables()
         setupUI()
-        setupCalendar()
-        setupOnboarding()
+        subscribeOnClickEvents()
+
+    }
+
+    private fun subscribeOnClickEvents() {
+        binding.floatingAddButton.setOnClickListener {
+            if (habitFlag >= 4) {
+                Toast.makeText(this, "You can only add 4 habits", Toast.LENGTH_SHORT).show()
+            } else {
+                showAddHabitDialog(this, viewModel)
+            }
+        }
     }
 
     private fun initializeVariables() {
@@ -61,14 +73,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupUI() {
         setupHabitListObserver()
+        setupCalendar()
+        setupOnboarding()
 
-        binding.floatingAddButton.setOnClickListener {
-            if (habitFlag >= 4) {
-                Toast.makeText(this, "You can only add 4 habits", Toast.LENGTH_SHORT).show()
-            } else {
-                showAddHabitDialog(this, viewModel)
-            }
-        }
+
     }
 
     private fun setupCalendar() {
@@ -178,57 +186,76 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    // **************** set habit resource based on of habit completed or not *********************
+    private fun observeHabitTracking(
+        container: DayViewContainer,
+        data: CalendarDay,
+        textView: TextView
+    ) {
 
-            // **************** set habit resource based on of habit completed or not *********************
-            private fun observeHabitTracking(
-                container: DayViewContainer,
-                data: CalendarDay,
-                textView: TextView
-            ) {
-
-                lifecycleScope.launch {
-                    viewModel.getAllHabitTrackingData()
-                        .observe(this@MainActivity) { habitDataList ->
-                            val habitData = habitDataList.find { it.date == data.date }
-                            container.textView.setBackgroundResource(
-                                habitData?.let { getHabitCompletionImageResource(it.habitCompleted, textView) }
-                                    ?: 0 // Default background if no habit data is found
+        lifecycleScope.launch {
+            viewModel.getAllHabitTrackingData()
+                .observe(this@MainActivity) { habitDataList ->
+                    val habitData = habitDataList.find { it.date == data.date }
+                    container.textView.setBackgroundResource(
+                        habitData?.let {
+                            getHabitCompletionImageResource(
+                                it.habitCompleted,
+                                textView
                             )
                         }
+                            ?: 0 // Default background if no habit data is found
+                    )
                 }
-            }
+        }
+    }
 
 
-            //********************************* fetch Habit list from db  ********************************
+    //********************************* fetch Habit list from db  ********************************
 
-            private fun setupHabitListObserver() {
+    private fun setupHabitListObserver() {
 
 
-                lifecycleScope.launch {
-                    viewModel.getAllHabits().observe(this@MainActivity) { habits ->
-                        habits?.let {
-                            binding.habitRcView.adapter = HabitAdapter(
-                                lifecycleOwner = this@MainActivity,
-                                habits = it,
-                                viewModel = viewModel
-                            )
-                            habitFlag = it.size
+        lifecycleScope.launch {
+            viewModel.getAllHabits().observe(this@MainActivity) { habits ->
+                habits?.let {
+                    binding.habitRcView.adapter = HabitAdapter(
+                        lifecycleOwner = this@MainActivity,
+                        habits = it,
+                        viewModel = viewModel
+                    ) { habit, actionType, x, y ->
 
-                        }
+                        showEditDeleteHabitPopup(
+                            binding,
+                            context = this@MainActivity,
+                            viewModel = viewModel,
+                            habit = habit,
+                            x,
+                            y
+                        )
                     }
                 }
             }
-
-            //********************************* on boarding screens for first time user ********************************
-            private fun setupOnboarding() {
-                MaterialOnBoarding.setupOnBoarding(
-                    this,
-                    getOnBoardingData(),
-                    object : OnFinishLastPage {
-                        override fun onNext() {
-                            startActivity(Intent(this@MainActivity, MainActivity::class.java))
-                            finish()
-                        }
-                    })
-            }
         }
+    }
+
+    private fun deleteHabit(habit: Habit) {
+        viewModel.deleteHabit(habit)
+        Toast.makeText(this, "Habit deleted", Toast.LENGTH_SHORT).show()
+        habitFlag--
+
+    }
+
+    //********************************* on boarding screens for first time user ********************************
+    private fun setupOnboarding() {
+        MaterialOnBoarding.setupOnBoarding(
+            this,
+            getOnBoardingData(),
+            object : OnFinishLastPage {
+                override fun onNext() {
+                    startActivity(Intent(this@MainActivity, MainActivity::class.java))
+                    finish()
+                }
+            })
+    }
+}
