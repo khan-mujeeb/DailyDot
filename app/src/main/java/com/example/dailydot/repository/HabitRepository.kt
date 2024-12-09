@@ -50,4 +50,9 @@ class HabitRepository(application: Application) {
     fun getAllHabits(): LiveData<List<Habit>> {
         return habitDao.getAllHabits()
     }
+
+    suspend fun updateHabit(habit: Habit) {
+        habitDao.updateHabit(habit.uid, habit.habitName)
+
+    }
 }

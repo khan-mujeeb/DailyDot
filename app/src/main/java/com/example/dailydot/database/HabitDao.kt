@@ -12,6 +12,12 @@ interface HabitDao {
     @Query("SELECT * FROM habit_table")
     fun getAllHabits(): LiveData<List<Habit>>
 
+    @Query("SELECT * FROM habit_table")
+    suspend fun getAllHabitsList(): List<Habit>
+
     @Delete
     suspend fun deleteHabit(habit: Habit)
+
+    @Query("UPDATE habit_table SET habitName = :habitName WHERE uid = :habitId")
+    suspend fun updateHabit(habitId: String, habitName: String)
 }

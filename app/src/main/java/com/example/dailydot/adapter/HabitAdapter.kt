@@ -1,7 +1,6 @@
 package com.example.dailydot.adapter
 
 import android.annotation.SuppressLint
-import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -65,6 +64,9 @@ class HabitAdapter(
                     }
                     false // Return false to allow other listeners like OnLongClickListener to work
                 }
+
+
+
 
                 holder.itemView.setOnLongClickListener {
                     // Trigger haptic feedback on hover

@@ -42,6 +42,10 @@ android {
 
 dependencies {
 
+    // work manager
+    implementation ("androidx.work:work-runtime-ktx:2.8.1")
+
+
     // onboarding library
     implementation ("com.github.ErrorxCode:ModernOnboarding:v1.5")
 

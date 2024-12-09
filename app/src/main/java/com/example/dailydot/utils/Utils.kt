@@ -129,7 +129,9 @@ object Utils {
 
         // Handle button clicks
         btnEditHabit.setOnClickListener {
-            // Handle edit logic
+
+            viewModel.updateHabit(habit)
+            Toast.makeText(context, "Habit updated", Toast.LENGTH_SHORT).show()
             popupWindow.dismiss()
         }
 

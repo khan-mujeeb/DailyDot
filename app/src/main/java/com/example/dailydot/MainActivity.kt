@@ -11,6 +11,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.dailydot.adapter.DayViewContainer
 import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.adapter.MonthViewContainer
@@ -19,6 +22,7 @@ import com.example.dailydot.data.Habit
 import com.example.dailydot.data.OnBoardingData.getOnBoardingData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.repository.HabitRepository
+import com.example.dailydot.utils.HabitWorker
 import com.example.dailydot.utils.Utils.getHabitCompletionImageResource
 import com.example.dailydot.utils.Utils.showAddHabitDialog
 import com.example.dailydot.utils.Utils.showEditDeleteHabitPopup
@@ -36,7 +40,9 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
+import java.util.Calendar
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -52,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         initializeVariables()
         setupUI()
         subscribeOnClickEvents()
+        scheduleHabitWorker()
 
     }
 
@@ -219,6 +226,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.getAllHabits().observe(this@MainActivity) { habits ->
                 habits?.let {
+
+                    habitFlag = it.size
                     binding.habitRcView.adapter = HabitAdapter(
                         lifecycleOwner = this@MainActivity,
                         habits = it,
@@ -257,5 +266,34 @@ class MainActivity : AppCompatActivity() {
                     finish()
                 }
             })
+    }
+
+
+//    ********************************* Worker for daily setup of habit ********************************
+
+    private fun scheduleHabitWorker() {
+        val currentTime = Calendar.getInstance()
+        val nextExecutionTime = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+
+            // If the time has already passed for today, schedule it for tomorrow
+            if (before(currentTime)) {
+                add(Calendar.DAY_OF_MONTH, 1)
+            }
+        }
+
+        val initialDelay = nextExecutionTime.timeInMillis - currentTime.timeInMillis
+
+        val workRequest = PeriodicWorkRequestBuilder<HabitWorker>(1, TimeUnit.DAYS)
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "HabitWorker", // A unique name to prevent duplicate workers
+            ExistingPeriodicWorkPolicy.REPLACE, // Replace the existing worker if any
+            workRequest
+        )
     }
 }
