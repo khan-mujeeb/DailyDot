@@ -7,6 +7,7 @@ import com.kizitonwose.calendar.view.ViewContainer
 
 class DayViewContainer(view: View) : ViewContainer(view) {
     val textView = view.findViewById<TextView>(R.id.calendarDayText)
+    val markerView = view.findViewById<View>(R.id.markerView)
 
     // With ViewBinding
 //     val textView = CalendarDayLayoutBinding.bind(view).calendarDayText

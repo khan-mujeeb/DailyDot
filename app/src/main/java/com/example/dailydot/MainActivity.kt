@@ -1,5 +1,6 @@
 package com.example.dailydot
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -104,6 +105,7 @@ class MainActivity : AppCompatActivity() {
             object : MonthHeaderFooterBinder<MonthViewContainer> {
                 override fun create(view: View): MonthViewContainer = MonthViewContainer(view)
 
+                @SuppressLint("SetTextI18n")
                 override fun bind(container: MonthViewContainer, data: CalendarMonth) {
                     container.textView.text = "${
                         data.yearMonth.month.getDisplayName(
@@ -118,7 +120,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupDaysOfWeek(container: LinearLayout) {
         container.removeAllViews()
-        DayOfWeek.values().forEach { day ->
+        DayOfWeek.entries.forEach { day ->
             val dayTextView = TextView(container.context).apply {
                 text = day.getDisplayName(TextStyle.SHORT, Locale.getDefault())
                 textSize = 12f
@@ -136,9 +138,18 @@ class MainActivity : AppCompatActivity() {
             override fun create(view: View) = DayViewContainer(view)
 
             override fun bind(container: DayViewContainer, data: CalendarDay) {
+
+                // Show marker for the current date
+                if (data.date == LocalDate.now()) {
+                    container.markerView.visibility = View.VISIBLE
+                } else {
+                    container.markerView.visibility = View.GONE
+                }
+
                 container.textView.apply {
                     text = data.date.dayOfMonth.toString()
                     setTextColor(getColor(if (data.position == DayPosition.MonthDate) R.color.active_text_color else R.color.inactive_text_color))
+
 
                     // Set click listener for each date
                     setOnClickListener {
