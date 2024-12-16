@@ -23,6 +23,9 @@ interface HabitDataDao {
     @Query("SELECT * FROM habit_tracking_table WHERE date = :date")
     fun getHabitsByDate(date: LocalDate): LiveData<HabitData>
 
+    @Query("SELECT * FROM habit_tracking_table WHERE date = :date")
+    suspend fun getOnceHabitsByDate(date: LocalDate): HabitData
+
     @Query("SELECT * FROM habit_tracking_table")
     fun getAllHabits(): LiveData<List<HabitData>>
 }

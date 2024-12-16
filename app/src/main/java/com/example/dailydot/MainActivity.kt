@@ -1,7 +1,9 @@
 package com.example.dailydot
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
@@ -19,7 +21,8 @@ import com.example.dailydot.adapter.DayViewContainer
 import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.adapter.MonthViewContainer
 import com.example.dailydot.adapter.PastHabitAdapter
-import com.example.dailydot.data.Habit
+import com.example.dailydot.data.HabitData
+import com.example.dailydot.data.HabitStatus
 import com.example.dailydot.data.OnBoardingData.getOnBoardingData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.repository.HabitRepository
@@ -44,8 +47,10 @@ import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
+
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: HabitViewModel
@@ -61,6 +66,9 @@ class MainActivity : AppCompatActivity() {
         subscribeOnClickEvents()
         scheduleHabitWorker()
 
+
+        insertDummyDataIfFirstTime()
+
     }
 
     private fun subscribeOnClickEvents() {
@@ -68,7 +76,7 @@ class MainActivity : AppCompatActivity() {
             if (habitFlag >= 4) {
                 Toast.makeText(this, "You can only add 4 habits", Toast.LENGTH_SHORT).show()
             } else {
-                showAddHabitDialog(this, viewModel)
+                showAddHabitDialog(context = this, viewModel = viewModel, lifecycleOwner = this)
             }
         }
     }
@@ -235,36 +243,43 @@ class MainActivity : AppCompatActivity() {
 
 
         lifecycleScope.launch {
-            viewModel.getAllHabits().observe(this@MainActivity) { habits ->
-                habits?.let {
 
-                    habitFlag = it.size
-                    binding.habitRcView.adapter = HabitAdapter(
-                        lifecycleOwner = this@MainActivity,
-                        habits = it,
-                        viewModel = viewModel
-                    ) { habit, actionType, x, y ->
 
-                        showEditDeleteHabitPopup(
-                            binding,
-                            context = this@MainActivity,
-                            viewModel = viewModel,
-                            habit = habit,
-                            x,
-                            y
-                        )
+            lifecycleScope.launch {
+                viewModel.getHabitsByDate(LocalDate.now())
+                    .observe(this@MainActivity) { habitData ->
+
+                        viewModel.getAllHabits().observe(this@MainActivity) { habits ->
+                            if (habitData != null) {
+                                habitFlag = habits.size
+                                binding.habitRcView.adapter = HabitAdapter(
+                                    lifecycleOwner = this@MainActivity,
+                                    habits = habits,
+                                    habitData = habitData,
+                                    viewModel = viewModel,
+
+                                    ) { habit, actionType, x, y ->
+
+                                    showEditDeleteHabitPopup(
+                                        binding,
+                                        context = this@MainActivity,
+                                        viewModel = viewModel,
+                                        habit = habit,
+                                        x,
+                                        y
+                                    )
+                                }
+                            } else {
+                                binding.habitRcView.adapter = null
+                            }
+                        }
                     }
-                }
+
+
             }
         }
     }
 
-    private fun deleteHabit(habit: Habit) {
-        viewModel.deleteHabit(habit)
-        Toast.makeText(this, "Habit deleted", Toast.LENGTH_SHORT).show()
-        habitFlag--
-
-    }
 
     //********************************* on boarding screens for first time user ********************************
     private fun setupOnboarding() {
@@ -273,6 +288,7 @@ class MainActivity : AppCompatActivity() {
             getOnBoardingData(),
             object : OnFinishLastPage {
                 override fun onNext() {
+
                     startActivity(Intent(this@MainActivity, MainActivity::class.java))
                     finish()
                 }
@@ -280,13 +296,13 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-//    ********************************* Worker for daily setup of habit ********************************
+//    ********************************* Worker for daily resting the habit tracking data ********************************
 
     private fun scheduleHabitWorker() {
         val currentTime = Calendar.getInstance()
         val nextExecutionTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
+            set(Calendar.HOUR_OF_DAY, 16)
+            set(Calendar.MINUTE, 25)
             set(Calendar.SECOND, 0)
 
             // If the time has already passed for today, schedule it for tomorrow
@@ -306,5 +322,50 @@ class MainActivity : AppCompatActivity() {
             ExistingPeriodicWorkPolicy.REPLACE, // Replace the existing worker if any
             workRequest
         )
+    }
+
+
+    fun insertDummyDataIfFirstTime() {
+        val sharedPreferences: SharedPreferences = this@MainActivity.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+
+        // Check if dummy data is already inserted
+        val isDataInserted = sharedPreferences.getBoolean("isDummyDataInserted", false)
+
+        if (!isDataInserted) {
+            // Insert dummy data
+            val startDate = LocalDate.of(2024, 1, 1)
+            val endDate = LocalDate.of(2024, 12, 10)
+            var currentDate = startDate
+
+            while (!currentDate.isAfter(endDate)) {
+                // Generate a randomized list of HabitStatus
+                val sampleHabits = listOf(
+                    HabitStatus("97-11effaad-1b8a-486d-b594-ca6092008de0", "a", Random.nextBoolean()),
+                    HabitStatus("98-b424e3ec-9386-4836-96b3-af3846c930a5", "b", Random.nextBoolean()),
+                    HabitStatus("99-ff218df0-d41d-4427-98bc-eb75b04f4a3b", "c", Random.nextBoolean()),
+                    HabitStatus("100-ce5d5c28-b416-424b-bc7d-bac1d872f6c9", "d", Random.nextBoolean()),
+                    HabitStatus("3154295-d555125b-c7e8-4e97-811c-5119c70b2d46", "fuck", Random.nextBoolean())
+                )
+
+                // Count the number of habits marked as true
+                val habitCompleted = sampleHabits.count { it.habitStatus }
+
+                // Create a HabitData object
+                val habitData = HabitData(
+                    date = currentDate,
+                    habitStatus = sampleHabits,
+                    habitCompleted = habitCompleted
+                )
+
+                // Insert the data into the database using ViewModel
+                viewModel.insertHabitData(habitData)
+
+                // Move to the next day
+                currentDate = currentDate.plusDays(1)
+            }
+
+            // Mark data as inserted in SharedPreferences
+            sharedPreferences.edit().putBoolean("isDummyDataInserted", true).apply()
+        }
     }
 }

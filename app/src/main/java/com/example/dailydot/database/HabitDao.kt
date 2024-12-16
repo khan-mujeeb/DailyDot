@@ -15,7 +15,7 @@ interface HabitDao {
     @Query("SELECT * FROM habit_table")
     suspend fun getAllHabitsList(): List<Habit>
 
-    @Delete
+    @Delete(entity = Habit::class)
     suspend fun deleteHabit(habit: Habit)
 
     @Query("UPDATE habit_table SET habitName = :habitName WHERE uid = :habitId")

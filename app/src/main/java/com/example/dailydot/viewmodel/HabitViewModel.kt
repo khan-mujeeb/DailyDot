@@ -37,14 +37,12 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     }
 
 
-
     fun getAllHabitTrackingData(): LiveData<List<HabitData>> {
         return repository.getAllHabitTrackingData()
     }
 
 
-
-//    **********************************************************************************************
+    //    **********************************************************************************************
 //                                          habit Data
 //    **********************************************************************************************
     fun insertHabit(habit: Habit) {
@@ -68,6 +66,101 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         viewModelScope.launch {
             repository.updateHabit(habit)
         }
+    }
+
+    suspend fun getOnceHabitsByDate(date: LocalDate): HabitData {
+        return repository.getOnceHabitsByDate(date)
+    }
+
+
+    //    **********************************************************************************************
+    //                                          adapter Data
+    //    **********************************************************************************************
+    fun addHabitToCompleted(habit: Habit, result: HabitData?) {
+        val updatedStatus = result?.habitStatus?.map {
+            if (it.uid == habit.uid) {
+                it.copy(habitStatus = true) // Update the habit's status
+            } else {
+                it
+            }
+        }?.toMutableList() ?: mutableListOf()
+
+
+        updateHabitData(
+            LocalDate.now(),
+            updatedStatus,
+            (result?.habitCompleted ?: 0) + 1
+        )
+
+    }
+
+
+    fun removeHabitFromCompleted(habit: Habit, result: HabitData?) {
+        val updatedStatus = result?.habitStatus?.map {
+            if (it.uid == habit.uid) {
+                it.copy(habitStatus = false) // Update the habit's status
+            } else {
+                it
+            }
+        }?.toMutableList() ?: mutableListOf()
+
+
+
+
+        updateHabitData(
+            LocalDate.now(),
+            updatedStatus,
+            (result?.habitCompleted ?: 1) - 1
+        )
+
+    }
+
+
+    fun addNewHabitSetupData(habit: Habit, result: HabitData?) {
+
+
+        val updatedStatus = result?.habitStatus?.toMutableList() // Convert to mutable list
+
+        // Add the new HabitStatus to the list
+
+
+        if (result == null) {
+
+            val tempHabit = HabitData(
+                id = 0,
+                date = LocalDate.now(),
+                habitStatus = listOf(
+                    HabitStatus(
+                        uid = habit.uid,
+                        habitStatus = false,
+                        habitName = habit.habitName
+                    )
+                ),
+
+                habitCompleted = 0
+
+            )
+
+            insertHabitData(tempHabit)
+
+        } else {
+
+            updatedStatus?.add(
+                HabitStatus(
+                    uid = habit.uid,
+                    habitStatus = false,
+                    habitName = habit.habitName
+                )
+            )
+
+            updateHabitData(
+                date = LocalDate.now(),
+                habitStatus = updatedStatus!!,
+                habitCompleted = result.habitCompleted
+            )
+        }
+
+
     }
 
 }

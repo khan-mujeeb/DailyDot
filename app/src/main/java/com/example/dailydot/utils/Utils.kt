@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
@@ -11,10 +12,16 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.example.dailydot.R
+import com.example.dailydot.adapter.HabitAdapter
+import com.example.dailydot.data.ActionType
 import com.example.dailydot.data.Habit
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.viewmodel.HabitViewModel
+import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.util.UUID
 
 object Utils {
@@ -63,7 +70,11 @@ object Utils {
     //                  This function will show a dialog to add a new habit
     // ******************************************************************************************
     @SuppressLint("MissingInflatedId")
-    fun showAddHabitDialog(context: Context, viewModel: HabitViewModel) {
+    fun showAddHabitDialog(
+        context: Context,
+        viewModel: HabitViewModel,
+        lifecycleOwner: LifecycleOwner
+    ) {
         // Inflate the dialog layout
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_habit, null)
         val etHabitName = dialogView.findViewById<EditText>(R.id.etHabitName)
@@ -86,6 +97,14 @@ object Utils {
                 )
 
                 viewModel.insertHabit(newHabit)
+
+                lifecycleOwner.lifecycleScope.launch {
+
+
+                    val habits = viewModel.getOnceHabitsByDate(LocalDate.now())
+                    viewModel.addNewHabitSetupData(newHabit, habits)
+
+                }
 
                 // Dismiss the dialog
                 dialog.dismiss()
@@ -143,6 +162,44 @@ object Utils {
 
         // Show the PopupWindow at the specified position
         popupWindow.showAtLocation(binding.root, Gravity.NO_GRAVITY, x.toInt(), y.toInt())
+    }
+
+
+    // ******************************************************************************************
+    //                  This function will show a dialog to edit and delete  a habit
+    // ******************************************************************************************
+    @SuppressLint("ClickableViewAccessibility")
+    fun threeDTouchClickListener(
+        holder: HabitAdapter.HabitViewHolder,
+        habit: Habit,
+        onHabitAction: (Habit, ActionType, Float, Float) -> Unit
+    ) {
+
+        var touchX = 0f
+        var touchY = 0f
+
+        holder.itemView.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                // Store touch coordinates
+                touchX = event.rawX
+                touchY = event.rawY
+            }
+            false // Return false to allow other listeners like OnLongClickListener to work
+        }
+
+
+        holder.itemView.setOnLongClickListener {
+            // Trigger haptic feedback on hover
+            onHabitAction(
+                habit,
+                ActionType.EDIT,
+                touchX,
+                touchY
+            )
+
+
+            true
+        }
     }
 
 }

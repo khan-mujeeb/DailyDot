@@ -1,14 +1,11 @@
 package com.example.dailydot.adapter
 
 import android.view.View
-import android.widget.TextView
-import com.example.dailydot.R
+import com.example.dailydot.databinding.CalendarDayLayoutBinding
 import com.kizitonwose.calendar.view.ViewContainer
 
 class DayViewContainer(view: View) : ViewContainer(view) {
-    val textView = view.findViewById<TextView>(R.id.calendarDayText)
-    val markerView = view.findViewById<View>(R.id.markerView)
 
-    // With ViewBinding
-//     val textView = CalendarDayLayoutBinding.bind(view).calendarDayText
+    val textView = CalendarDayLayoutBinding.bind(view).calendarDayText
+    val markerView = CalendarDayLayoutBinding.bind(view).markerView
 }

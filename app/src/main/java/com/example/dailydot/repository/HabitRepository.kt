@@ -55,4 +55,8 @@ class HabitRepository(application: Application) {
         habitDao.updateHabit(habit.uid, habit.habitName)
 
     }
+
+    suspend fun getOnceHabitsByDate(date: LocalDate): HabitData {
+        return habitDataDao.getOnceHabitsByDate(date)
+    }
 }

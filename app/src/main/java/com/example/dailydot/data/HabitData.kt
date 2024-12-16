@@ -7,9 +7,9 @@ import java.time.LocalDate
 @Entity(tableName = "habit_tracking_table")
 data class HabitData(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
-    val date: LocalDate,
-    val habitStatus: List<HabitStatus>,
+    val id: Int = 0,
+    val date: LocalDate = LocalDate.now(),
+    val habitStatus: List<HabitStatus> = emptyList(),
     val habitCompleted: Int = 0
 )
 
