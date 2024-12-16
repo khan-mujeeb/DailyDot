@@ -154,22 +154,9 @@ class MainActivity : AppCompatActivity() {
                     container.markerView.visibility = View.GONE
                 }
 
-                container.textView.apply {
-                    text = data.date.dayOfMonth.toString()
-                    setTextColor(getColor(if (data.position == DayPosition.MonthDate) R.color.active_text_color else R.color.inactive_text_color))
-
-
-                    // Set click listener for each date
-                    setOnClickListener {
-                        if (data.position == DayPosition.MonthDate && data.date <= LocalDate.now()) {
-                            onDateClicked(data)
-                        } else {
-                            Toast.makeText(context, "Invalid date selection", Toast.LENGTH_SHORT)
-                                .show()
-                        }
-                    }
-                }
                 observeHabitTracking(container, data, container.textView)
+
+
             }
         }
     }
@@ -212,26 +199,55 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    // **************** set habit resource based on of habit completed or not *********************
+    // **************** set background color/text color on a calender for date *********************
     private fun observeHabitTracking(
         container: DayViewContainer,
         data: CalendarDay,
         textView: TextView
     ) {
 
+
         lifecycleScope.launch {
             viewModel.getAllHabitTrackingData()
                 .observe(this@MainActivity) { habitDataList ->
                     val habitData = habitDataList.find { it.date == data.date }
-                    container.textView.setBackgroundResource(
-                        habitData?.let {
-                            getHabitCompletionImageResource(
-                                it.habitCompleted,
-                                textView
-                            )
+                    container.textView.apply {
+
+                        textView.setBackgroundResource(
+                            habitData?.let {
+                                getHabitCompletionImageResource(
+                                    it.habitCompleted,
+                                    textView
+                                )
+                            }
+                                ?: 0 // Default background if no habit data is found
+                        )
+                        text = data.date.dayOfMonth.toString()
+
+
+                        if (data.position == DayPosition.MonthDate) {
+                            setTextColor(getColor(R.color.active_text_color))
+                        } else {
+                            setTextColor(getColor(R.color.inactive_text_color))
+                            setBackgroundResource(R.drawable.heatmap_bg0)
                         }
-                            ?: 0 // Default background if no habit data is found
-                    )
+
+
+                        // Set click listener for each date
+                        setOnClickListener {
+                            if (data.position == DayPosition.MonthDate && data.date <= LocalDate.now()) {
+                                onDateClicked(data)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Invalid date selection",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
+                            }
+                        }
+                    }
+
                 }
         }
     }
@@ -326,7 +342,8 @@ class MainActivity : AppCompatActivity() {
 
 
     fun insertDummyDataIfFirstTime() {
-        val sharedPreferences: SharedPreferences = this@MainActivity.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val sharedPreferences: SharedPreferences =
+            this@MainActivity.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
 
         // Check if dummy data is already inserted
         val isDataInserted = sharedPreferences.getBoolean("isDummyDataInserted", false)
@@ -340,11 +357,31 @@ class MainActivity : AppCompatActivity() {
             while (!currentDate.isAfter(endDate)) {
                 // Generate a randomized list of HabitStatus
                 val sampleHabits = listOf(
-                    HabitStatus("97-11effaad-1b8a-486d-b594-ca6092008de0", "a", Random.nextBoolean()),
-                    HabitStatus("98-b424e3ec-9386-4836-96b3-af3846c930a5", "b", Random.nextBoolean()),
-                    HabitStatus("99-ff218df0-d41d-4427-98bc-eb75b04f4a3b", "c", Random.nextBoolean()),
-                    HabitStatus("100-ce5d5c28-b416-424b-bc7d-bac1d872f6c9", "d", Random.nextBoolean()),
-                    HabitStatus("3154295-d555125b-c7e8-4e97-811c-5119c70b2d46", "fuck", Random.nextBoolean())
+                    HabitStatus(
+                        "97-11effaad-1b8a-486d-b594-ca6092008de0",
+                        "a",
+                        Random.nextBoolean()
+                    ),
+                    HabitStatus(
+                        "98-b424e3ec-9386-4836-96b3-af3846c930a5",
+                        "b",
+                        Random.nextBoolean()
+                    ),
+                    HabitStatus(
+                        "99-ff218df0-d41d-4427-98bc-eb75b04f4a3b",
+                        "c",
+                        Random.nextBoolean()
+                    ),
+                    HabitStatus(
+                        "100-ce5d5c28-b416-424b-bc7d-bac1d872f6c9",
+                        "d",
+                        Random.nextBoolean()
+                    ),
+                    HabitStatus(
+                        "3154295-d555125b-c7e8-4e97-811c-5119c70b2d46",
+                        "fuck",
+                        Random.nextBoolean()
+                    )
                 )
 
                 // Count the number of habits marked as true
