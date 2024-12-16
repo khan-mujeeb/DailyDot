@@ -58,8 +58,11 @@ class HabitAdapter(
         // Set listener for checkbox click
         holder.checkBox.setOnClickListener {
 
+
             when {
+
                 holder.checkBox.isChecked && habitData == null -> {
+
 
                     // Insert new habit data when no record exists for today
                     viewModel.insertHabitData(
@@ -75,7 +78,11 @@ class HabitAdapter(
                             ),
                             habitCompleted = 1
                         )
+
+
                     )
+
+
                 }
 
                 holder.checkBox.isChecked -> {
@@ -87,7 +94,10 @@ class HabitAdapter(
                     // Remove from completed list
                     viewModel.removeHabitFromCompleted(habit, habitData)
                 }
+
             }
+
+
         }
 
 
@@ -99,10 +109,4 @@ class HabitAdapter(
         return habits.size
     }
 
-    // Method to update the list and notify changes
-//    fun setHabits(newHabits: List<Habit>) {
-//        habits.clear()
-//        habits.addAll(newHabits)
-//        notifyDataSetChanged()
-//    }
 }

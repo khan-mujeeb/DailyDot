@@ -213,10 +213,12 @@ class MainActivity : AppCompatActivity() {
                     val habitData = habitDataList.find { it.date == data.date }
                     container.textView.apply {
 
+                        val count = habitData?.habitStatus?.count { it.habitStatus}
+
                         textView.setBackgroundResource(
                             habitData?.let {
                                 getHabitCompletionImageResource(
-                                    it.habitCompleted,
+                                    count!!,
                                     textView
                                 )
                             }
