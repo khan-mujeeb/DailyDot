@@ -42,6 +42,12 @@ android {
 
 dependencies {
 
+
+    // glide library
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    implementation ("com.github.bumptech.glide:okhttp3-integration:4.15.1")
+
+
     // work manager
     implementation ("androidx.work:work-runtime-ktx:2.8.1")
 

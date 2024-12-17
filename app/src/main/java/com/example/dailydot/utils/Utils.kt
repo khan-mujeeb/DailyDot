@@ -8,12 +8,14 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.example.dailydot.R
 import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.data.ActionType
@@ -64,6 +66,32 @@ object Utils {
             else -> R.drawable.heatmap_bg4 // Default to max
         }
     }
+
+    // ******************************************************************************************
+    //                              loading alert dialog / loader
+    // ******************************************************************************************
+    fun showLoaderDialog(context: Context): AlertDialog {
+
+        // Inflate the custom layout
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_loader, null)
+
+        // Find the ImageView in the inflated view
+        val loaderImageView = dialogView.findViewById<ImageView>(R.id.ivLoader)
+        Glide.with(context).asGif().load(R.drawable.fidget).into(loaderImageView)
+
+        // Create AlertDialog
+        val loaderDialog = AlertDialog.Builder(context)
+            .setView(dialogView)
+            .setCancelable(false) // Prevent dismissal when tapping outside
+            .create()
+
+        // Show the dialog
+
+
+
+        return loaderDialog
+    }
+
 
 
     // ******************************************************************************************

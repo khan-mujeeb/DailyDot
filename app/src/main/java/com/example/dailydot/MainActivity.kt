@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -30,6 +31,7 @@ import com.example.dailydot.utils.HabitWorker
 import com.example.dailydot.utils.Utils.getHabitCompletionImageResource
 import com.example.dailydot.utils.Utils.showAddHabitDialog
 import com.example.dailydot.utils.Utils.showEditDeleteHabitPopup
+import com.example.dailydot.utils.Utils.showLoaderDialog
 import com.example.dailydot.viewmodel.HabitViewModel
 import com.example.dailydot.viewmodel.HabitViewModelFactory
 import com.kizitonwose.calendar.core.CalendarDay
@@ -55,6 +57,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: HabitViewModel
     private var habitFlag = 0
+    private lateinit var loader: AlertDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +85,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeVariables() {
+        loader = showLoaderDialog(this)
         val repository = HabitRepository(application)
         val factory = HabitViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory)[HabitViewModel::class.java]
@@ -96,6 +100,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupCalendar() {
+
+//        loader.show()
+
         val currentMonth = YearMonth.now()
         binding.calendarView.setup(
             currentMonth.minusMonths(12),
@@ -106,6 +113,9 @@ class MainActivity : AppCompatActivity() {
 
         setupMonthHeaderBinder()
         setupDayBinder()
+
+//        loader.dismiss()
+
     }
 
     private fun setupMonthHeaderBinder() {
@@ -142,21 +152,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupDayBinder() {
+        val defaultHabitDataList = listOf<HabitData>() // Empty default list
+
         binding.calendarView.dayBinder = object : MonthDayBinder<DayViewContainer> {
             override fun create(view: View) = DayViewContainer(view)
 
             override fun bind(container: DayViewContainer, data: CalendarDay) {
+                // Fallback to defaultHabitDataList until LiveData updates
+                observeHabitTracking(container, data, container.textView, defaultHabitDataList)
+            }
+        }
 
-                // Show marker for the current date
-                if (data.date == LocalDate.now()) {
-                    container.markerView.visibility = View.VISIBLE
-                } else {
-                    container.markerView.visibility = View.GONE
+        lifecycleScope.launch {
+            viewModel.getAllHabitTrackingData().observe(this@MainActivity) { habitDataList ->
+                // Reassign the binder once data is available
+                binding.calendarView.dayBinder = object : MonthDayBinder<DayViewContainer> {
+                    override fun create(view: View) = DayViewContainer(view)
+
+                    override fun bind(container: DayViewContainer, data: CalendarDay) {
+                        observeHabitTracking(container, data, container.textView, habitDataList)
+                    }
                 }
-
-                observeHabitTracking(container, data, container.textView)
-
-
             }
         }
     }
@@ -196,6 +212,8 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+
+
     }
 
 
@@ -203,55 +221,58 @@ class MainActivity : AppCompatActivity() {
     private fun observeHabitTracking(
         container: DayViewContainer,
         data: CalendarDay,
-        textView: TextView
+        textView: TextView,
+        habitDataList: List<HabitData>
     ) {
 
 
-        lifecycleScope.launch {
-            viewModel.getAllHabitTrackingData()
-                .observe(this@MainActivity) { habitDataList ->
-                    val habitData = habitDataList.find { it.date == data.date }
-                    container.textView.apply {
+        val habitData = habitDataList.find { it.date == data.date }
+        container.textView.apply {
 
-                        val count = habitData?.habitStatus?.count { it.habitStatus}
+            val count = habitData?.habitStatus?.count { it.habitStatus }
 
-                        textView.setBackgroundResource(
-                            habitData?.let {
-                                getHabitCompletionImageResource(
-                                    count!!,
-                                    textView
-                                )
-                            }
-                                ?: 0 // Default background if no habit data is found
-                        )
-                        text = data.date.dayOfMonth.toString()
-
-
-                        if (data.position == DayPosition.MonthDate) {
-                            setTextColor(getColor(R.color.active_text_color))
-                        } else {
-                            setTextColor(getColor(R.color.inactive_text_color))
-                            setBackgroundResource(R.drawable.heatmap_bg0)
-                        }
-
-
-                        // Set click listener for each date
-                        setOnClickListener {
-                            if (data.position == DayPosition.MonthDate && data.date <= LocalDate.now()) {
-                                onDateClicked(data)
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Invalid date selection",
-                                    Toast.LENGTH_SHORT
-                                )
-                                    .show()
-                            }
-                        }
-                    }
-
+            textView.setBackgroundResource(
+                habitData?.let {
+                    getHabitCompletionImageResource(
+                        count!!,
+                        textView
+                    )
                 }
+                    ?: 0 // Default background if no habit data is found
+            )
+            text = data.date.dayOfMonth.toString()
+
+
+            if (data.position == DayPosition.MonthDate) {
+                setTextColor(getColor(R.color.active_text_color))
+            } else {
+                setTextColor(getColor(R.color.inactive_text_color))
+                setBackgroundResource(R.drawable.heatmap_bg0)
+            }
+
+            if (data.date == LocalDate.now()) {
+                container.markerView?.visibility = View.VISIBLE
+            } else {
+                container.markerView?.visibility = View.GONE
+            }
+
+
+            // Set click listener for each date
+            setOnClickListener {
+                if (data.position == DayPosition.MonthDate && data.date <= LocalDate.now()) {
+                    onDateClicked(data)
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Invalid date selection",
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+                }
+            }
         }
+
+
     }
 
 
@@ -261,13 +282,13 @@ class MainActivity : AppCompatActivity() {
 
 
         lifecycleScope.launch {
+            viewModel.getHabitsByDate(LocalDate.now())
+                .observe(this@MainActivity) { habitData ->
 
-
-            lifecycleScope.launch {
-                viewModel.getHabitsByDate(LocalDate.now())
-                    .observe(this@MainActivity) { habitData ->
-
+                    lifecycleScope.launch {
                         viewModel.getAllHabits().observe(this@MainActivity) { habits ->
+
+
                             if (habitData != null) {
                                 habitFlag = habits.size
                                 binding.habitRcView.adapter = HabitAdapter(
@@ -288,14 +309,23 @@ class MainActivity : AppCompatActivity() {
                                     )
                                 }
                             } else {
+
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "No data available ",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 binding.habitRcView.adapter = null
                             }
                         }
+
                     }
 
+                }
 
-            }
+
         }
+
     }
 
 
@@ -319,7 +349,7 @@ class MainActivity : AppCompatActivity() {
     private fun scheduleHabitWorker() {
         val currentTime = Calendar.getInstance()
         val nextExecutionTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 16)
+            set(Calendar.HOUR_OF_DAY, 20)
             set(Calendar.MINUTE, 25)
             set(Calendar.SECOND, 0)
 

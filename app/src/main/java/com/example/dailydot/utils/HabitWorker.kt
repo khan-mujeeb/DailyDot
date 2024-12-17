@@ -20,6 +20,8 @@ class HabitWorker(appContext: Context, workerParams: WorkerParameters) :
         val habitStatusList = mutableListOf<HabitStatus>()
 
 
+
+
         // Create a list of habit status for the current date and mark all habits as incomplete
         habits.forEach { habit ->
             habitStatusList.add(
@@ -34,7 +36,8 @@ class HabitWorker(appContext: Context, workerParams: WorkerParameters) :
             HabitData(
                 id = 0,
                 date = currentDate,
-                habitStatus = habitStatusList
+                habitStatus = habitStatusList,
+                habitCompleted = 0
             )
         )
 
