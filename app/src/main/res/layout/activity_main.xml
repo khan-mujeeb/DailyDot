@@ -27,20 +27,32 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <androidx.cardview.widget.CardView
+        app:cardCornerRadius="50dp"
         android:id="@+id/floatingAddButton"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:layout_marginBottom="50dp"
         android:layout_marginEnd="10dp"
         android:backgroundTint="@color/example_4_green"
-        android:src="@drawable/baseline_add_24"
         app:borderWidth="0dp"
         app:tint="@color/active_text_color"
 
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/todo" />
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:contentDescription="@string/todo" >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/baseline_add_24"
+                android:contentDescription="@string/add_icon" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
 
 
 </RelativeLayout>

@@ -4,4 +4,5 @@
     <string name="reading">Reading</string>
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
+    <string name="add_icon">add icon</string>
 </resources>
