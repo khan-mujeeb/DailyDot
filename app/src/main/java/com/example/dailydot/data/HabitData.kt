@@ -8,8 +8,7 @@ import java.time.LocalDate
 data class HabitData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val date: LocalDate = LocalDate.now(),
-    val habitStatus: List<HabitStatus> = emptyList(),
-    val habitCompleted: Int = 0
+    val date: LocalDate,
+    val habitStatus: List<HabitStatus>, // stored via TypeConverter
+    val habitCompleted: Int
 )
-

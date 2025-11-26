@@ -15,17 +15,25 @@ interface HabitDataDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabitData(habitData: HabitData)
 
-    @Query("UPDATE habit_tracking_table SET habitStatus = :habitStatus, habitCompleted = :habitCompleted WHERE date = :date")
-    suspend fun updateHabitData(date: LocalDate, habitStatus: List<HabitStatus>, habitCompleted: Int)
+    // Update today's tracking row by date
+    @Query("""
+        UPDATE habit_tracking_table 
+        SET habitStatus = :habitStatus, habitCompleted = :habitCompleted 
+        WHERE date = :date
+    """)
+    suspend fun updateHabitData(
+        date: LocalDate,
+        habitStatus: List<HabitStatus>,
+        habitCompleted: Int
+    ): Int
 
+    @Query("SELECT * FROM habit_tracking_table WHERE date = :date LIMIT 1")
+    fun getHabitDataByDate(date: LocalDate): LiveData<HabitData?>
 
+    @Query("SELECT * FROM habit_tracking_table WHERE date = :date LIMIT 1")
+    suspend fun getOnceHabitsByDate(date: LocalDate): HabitData?
 
-    @Query("SELECT * FROM habit_tracking_table WHERE date = :date")
-    fun getHabitsByDate(date: LocalDate): LiveData<HabitData>
-
-    @Query("SELECT * FROM habit_tracking_table WHERE date = :date")
-    suspend fun getOnceHabitsByDate(date: LocalDate): HabitData
 
     @Query("SELECT * FROM habit_tracking_table")
-    fun getAllHabits(): LiveData<List<HabitData>>
+    fun getAllHabitData(): LiveData<List<HabitData>>
 }

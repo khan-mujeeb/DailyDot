@@ -2,9 +2,6 @@ package com.example.dailydot
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
-import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -24,14 +21,11 @@ import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.adapter.MonthViewContainer
 import com.example.dailydot.adapter.PastHabitAdapter
 import com.example.dailydot.data.HabitData
-import com.example.dailydot.data.HabitStatus
-import com.example.dailydot.data.OnBoardingData.getOnBoardingData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.repository.HabitRepository
 import com.example.dailydot.utils.HabitWorker
 import com.example.dailydot.utils.Utils.getHabitCompletionImageResource
 import com.example.dailydot.utils.Utils.showAddHabitDialog
-import com.example.dailydot.utils.Utils.showEditDeleteHabitPopup
 import com.example.dailydot.utils.Utils.showLoaderDialog
 import com.example.dailydot.viewmodel.HabitViewModel
 import com.example.dailydot.viewmodel.HabitViewModelFactory
@@ -50,63 +44,87 @@ import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
-
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: HabitViewModel
-    private var habitFlag = 0
-
     private lateinit var loader: AlertDialog
 
+    private var habitCount: Int = 0
+    private var habitByDate: Map<LocalDate, HabitData> = emptyMap()
+    private lateinit var currentDate: LocalDate
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
-        val splashScreen = installSplashScreen()
         setContentView(binding.root)
 
-
+        initializeViewModel()
         initializeVariables()
         setupUI()
-        subscribeOnClickEvents()
+        setupClickListeners()
         scheduleHabitWorker()
-
-
-        insertDummyDataIfFirstTime()
-
     }
 
-    private fun subscribeOnClickEvents() {
-        binding.floatingAddButton.setOnClickListener {
-            if (habitFlag >= 4) {
-                Toast.makeText(this, "You can only add 4 habits", Toast.LENGTH_SHORT).show()
-            } else {
-                showAddHabitDialog(context = this, viewModel = viewModel, lifecycleOwner = this)
-            }
-        }
-    }
-
-    private fun initializeVariables() {
-        loader = showLoaderDialog(this)
+    private fun initializeViewModel() {
         val repository = HabitRepository(application)
         val factory = HabitViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory)[HabitViewModel::class.java]
     }
 
-    private fun setupUI() {
-        setupHabitListObserver()
-        setupCalendar()
-        setupOnboarding()
-
-
+    private fun initializeVariables() {
+        currentDate = LocalDate.now()
+        loader = showLoaderDialog(this)
+        loader.show()
     }
 
+    private fun setupUI() {
+        setupHabitObservers()
+        setupCalendar()
+        setupOnboarding()
+    }
+
+    // ------------------------------------------------------------------------
+    // HABITS & TRACKING OBSERVERS
+    // ------------------------------------------------------------------------
+    private fun setupHabitObservers() {
+        // track total count (for limiting add to 4)
+        viewModel.getAllHabits().observe(this) { habits ->
+            habitCount = habits?.size ?: 0
+        }
+
+        // today’s habit data for list
+        viewModel.getHabitDataByDate(currentDate).observe(this) { habitData ->
+            loader.dismiss()
+
+            if (habitData != null) {
+                // We already have a tracking row for today → show it
+                binding.habitRcView.adapter = HabitAdapter(habitData, viewModel)
+            } else {
+                // No HabitData for today yet → lazily create it from Habit table
+                lifecycleScope.launch {
+                    viewModel.createTodayHabitDataIfMissing()
+                    // After insertion, LiveData will emit again and come back into this observer
+                }
+                // Optionally, you can clear adapter but don't show "no data" toast anymore
+                binding.habitRcView.adapter = null
+            }
+        }
+
+        // all habit tracking for heatmap calendar
+        viewModel.getAllHabitTrackingData().observe(this) { list ->
+            habitByDate = (list ?: emptyList()).associateBy { it.date }
+            binding.calendarView.notifyCalendarChanged()
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // CALENDAR (Kizitonwose) SETUP
+    // ------------------------------------------------------------------------
     private fun setupCalendar() {
-
-//        loader.show()
-
         val currentMonth = YearMonth.now()
         binding.calendarView.setup(
             currentMonth.minusMonths(12),
@@ -117,24 +135,18 @@ class MainActivity : AppCompatActivity() {
 
         setupMonthHeaderBinder()
         setupDayBinder()
-
-//        loader.dismiss()
-
     }
 
     private fun setupMonthHeaderBinder() {
         binding.calendarView.monthHeaderBinder =
             object : MonthHeaderFooterBinder<MonthViewContainer> {
+
                 override fun create(view: View): MonthViewContainer = MonthViewContainer(view)
 
                 @SuppressLint("SetTextI18n")
                 override fun bind(container: MonthViewContainer, data: CalendarMonth) {
-                    container.textView.text = "${
-                        data.yearMonth.month.getDisplayName(
-                            TextStyle.FULL,
-                            Locale.getDefault()
-                        )
-                    } ${data.yearMonth.year}"
+                    container.textView.text =
+                        "${data.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${data.yearMonth.year}"
                     setupDaysOfWeek(container.daysOfWeekContainer)
                 }
             }
@@ -143,212 +155,120 @@ class MainActivity : AppCompatActivity() {
     private fun setupDaysOfWeek(container: LinearLayout) {
         container.removeAllViews()
         DayOfWeek.entries.forEach { day ->
-            val dayTextView = TextView(container.context).apply {
+            val tv = TextView(container.context).apply {
                 text = day.getDisplayName(TextStyle.SHORT, Locale.getDefault())
                 textSize = 12f
-                setTextColor(Color.GRAY)
+                setTextColor(getColor(R.color.inactive_text_color))
                 gravity = Gravity.CENTER
-                layoutParams =
-                    LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
             }
-            container.addView(dayTextView)
+            container.addView(tv)
         }
     }
 
     private fun setupDayBinder() {
-        val defaultHabitDataList = listOf<HabitData>() // Empty default list
-
         binding.calendarView.dayBinder = object : MonthDayBinder<DayViewContainer> {
             override fun create(view: View) = DayViewContainer(view)
 
             override fun bind(container: DayViewContainer, data: CalendarDay) {
-                // Fallback to defaultHabitDataList until LiveData updates
-                observeHabitTracking(container, data, container.textView, defaultHabitDataList)
-            }
-        }
+                val textView = container.textView
+                val habitDataForDay = habitByDate[data.date]
 
-        lifecycleScope.launch {
-            viewModel.getAllHabitTrackingData().observe(this@MainActivity) { habitDataList ->
-                // Reassign the binder once data is available
-                binding.calendarView.dayBinder = object : MonthDayBinder<DayViewContainer> {
-                    override fun create(view: View) = DayViewContainer(view)
+                val completedCount = habitDataForDay?.habitCompleted ?: 0
+                val bgRes = getHabitCompletionImageResource(completedCount, textView)
 
-                    override fun bind(container: DayViewContainer, data: CalendarDay) {
-                        observeHabitTracking(container, data, container.textView, habitDataList)
-                    }
-                }
-            }
-        }
-    }
+                textView.apply {
+                    text = data.date.dayOfMonth.toString()
 
-
-    private fun onDateClicked(data: CalendarDay) {
-        // Handle date click action
-        val selectedDate = data.date
-
-        loadHabitsForSelectedDate(selectedDate)
-
-    }
-
-    private fun loadHabitsForSelectedDate(selectedDate: LocalDate) {
-        lifecycleScope.launch {
-            val pastHabitList = viewModel.getHabitsByDate(selectedDate)
-
-            pastHabitList.observe(this@MainActivity) { habitData ->
-                if (selectedDate == LocalDate.now()) {
-                    setupHabitListObserver()
-
-                } else {
-                    if (habitData != null) {
-                        binding.habitRcView.adapter = PastHabitAdapter(habitData.habitStatus)
+                    if (data.position == DayPosition.MonthDate) {
+                        setTextColor(getColor(R.color.active_text_color))
+                        setBackgroundResource(if (bgRes != 0) bgRes else R.drawable.heatmap_bg0)
                     } else {
-                        binding.habitRcView.adapter = null
-                        Toast.makeText(
-                            this@MainActivity,
-                            "No data available for the selected date",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
+                        setTextColor(getColor(R.color.inactive_text_color))
+                        setBackgroundResource(R.drawable.heatmap_bg0)
                     }
-                }
 
-                pastHabitList.removeObservers(this@MainActivity)
+                    // show marker on today's date
+                    container.markerView?.visibility =
+                        if (data.date == LocalDate.now()) View.VISIBLE else View.GONE
 
-            }
-        }
-
-
-    }
-
-
-    // **************** set background color/text color on a calender for date *********************
-    private fun observeHabitTracking(
-        container: DayViewContainer,
-        data: CalendarDay,
-        textView: TextView,
-        habitDataList: List<HabitData>
-    ) {
-
-
-        val habitData = habitDataList.find { it.date == data.date }
-        container.textView.apply {
-
-            val count = habitData?.habitStatus?.count { it.habitStatus }
-
-            textView.setBackgroundResource(
-                habitData?.let {
-                    getHabitCompletionImageResource(
-                        count!!,
-                        textView
-                    )
-                }
-                    ?: 0 // Default background if no habit data is found
-            )
-            text = data.date.dayOfMonth.toString()
-
-
-            if (data.position == DayPosition.MonthDate) {
-                setTextColor(getColor(R.color.active_text_color))
-            } else {
-                setTextColor(getColor(R.color.inactive_text_color))
-                setBackgroundResource(R.drawable.heatmap_bg0)
-            }
-
-            if (data.date == LocalDate.now()) {
-                container.markerView?.visibility = View.VISIBLE
-            } else {
-                container.markerView?.visibility = View.GONE
-            }
-
-
-            // Set click listener for each date
-            setOnClickListener {
-                if (data.position == DayPosition.MonthDate && data.date <= LocalDate.now()) {
-                    onDateClicked(data)
-                } else {
-                    Toast.makeText(
-                        context,
-                        "Invalid date selection",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                }
-            }
-        }
-
-
-    }
-
-
-    //********************************* fetch Habit list from db  ********************************
-
-    private fun setupHabitListObserver() {
-
-
-        lifecycleScope.launch {
-            viewModel.getHabitsByDate(LocalDate.now())
-                .observe(this@MainActivity) { habitData ->
-
-                    lifecycleScope.launch {
-                        viewModel.getAllHabits().observe(this@MainActivity) { habits ->
-
-
-                            if (habitData != null) {
-                                habitFlag = habits.size
-                                binding.habitRcView.adapter = HabitAdapter(
-                                    lifecycleOwner = this@MainActivity,
-                                    habits = habits,
-                                    habitData = habitData,
-                                    viewModel = viewModel,
-
-                                    ) { habit, actionType, x, y ->
-
-                                    showEditDeleteHabitPopup(
-                                        binding,
-                                        context = this@MainActivity,
-                                        viewModel = viewModel,
-                                        habit = habit,
-                                        x,
-                                        y
-                                    )
-                                }
-                            } else {
-
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "No data available ",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                binding.habitRcView.adapter = null
-                            }
+                    setOnClickListener {
+                        if (data.position == DayPosition.MonthDate && data.date <= LocalDate.now()) {
+                            onDateClicked(data.date)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Invalid date selection",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
-
                     }
-
                 }
-
-
+            }
         }
-
     }
 
-
-    //********************************* on boarding screens for first time user ********************************
-    private fun setupOnboarding() {
-        MaterialOnBoarding.setupOnBoarding(
-            this,
-            getOnBoardingData(),
-            object : OnFinishLastPage {
-                override fun onNext() {
-
-                    startActivity(Intent(this@MainActivity, MainActivity::class.java))
-                    finish()
+    private fun onDateClicked(selectedDate: LocalDate) {
+        val liveData = viewModel.getHabitDataByDate(selectedDate)
+        liveData.observe(this) { habitData ->
+            if (selectedDate == LocalDate.now()) {
+                if (habitData != null) {
+                    binding.habitRcView.adapter = HabitAdapter(habitData, viewModel)
+                } else {
+                    binding.habitRcView.adapter = null
                 }
-            })
+            } else {
+                if (habitData != null) {
+                    binding.habitRcView.adapter = PastHabitAdapter(habitData.habitStatus)
+                } else {
+                    binding.habitRcView.adapter = null
+                    Toast.makeText(
+                        this,
+                        "No data available for the selected date",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            // one-shot observe to avoid piling observers
+            liveData.removeObservers(this)
+        }
     }
 
+    // ------------------------------------------------------------------------
+    // CLICKS / FAB / ONBOARDING / WORKER
+    // ------------------------------------------------------------------------
+    private fun setupClickListeners() {
+        binding.floatingAddButton.setOnClickListener {
+            if (habitCount >= 4) {
+                Toast.makeText(this, "You can only add 4 habits", Toast.LENGTH_SHORT).show()
+            } else {
+                showAddHabitDialog(
+                    context = this,
+                    viewModel = viewModel,
+                    lifecycleOwner = this
+                )
+            }
+        }
+    }
 
-//    ********************************* Worker for daily resting the habit tracking data ********************************
+    private fun setupOnboarding() {
+        val prefs = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val seenOnboarding = prefs.getBoolean("hasSeenOnboarding", false)
+        if (!seenOnboarding) {
+            MaterialOnBoarding.setupOnBoarding(this,
+                com.example.dailydot.data.OnBoardingData.getOnBoardingData(),
+                object : OnFinishLastPage {
+                    override fun onNext() {
+                        prefs.edit().putBoolean("hasSeenOnboarding", true).apply()
+                    }
+                })
+        }
+    }
 
     private fun scheduleHabitWorker() {
         val currentTime = Calendar.getInstance()
@@ -356,8 +276,6 @@ class MainActivity : AppCompatActivity() {
             set(Calendar.HOUR_OF_DAY, 20)
             set(Calendar.MINUTE, 25)
             set(Calendar.SECOND, 0)
-
-            // If the time has already passed for today, schedule it for tomorrow
             if (before(currentTime)) {
                 add(Calendar.DAY_OF_MONTH, 1)
             }
@@ -365,80 +283,14 @@ class MainActivity : AppCompatActivity() {
 
         val initialDelay = nextExecutionTime.timeInMillis - currentTime.timeInMillis
 
-        val workRequest = PeriodicWorkRequestBuilder<HabitWorker>(1, TimeUnit.DAYS)
+        val request = PeriodicWorkRequestBuilder<HabitWorker>(1, TimeUnit.DAYS)
             .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "HabitWorker", // A unique name to prevent duplicate workers
-            ExistingPeriodicWorkPolicy.REPLACE, // Replace the existing worker if any
-            workRequest
+            "HabitWorker",
+            ExistingPeriodicWorkPolicy.REPLACE,
+            request
         )
-    }
-
-
-    fun insertDummyDataIfFirstTime() {
-        val sharedPreferences: SharedPreferences =
-            this@MainActivity.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-
-        // Check if dummy data is already inserted
-        val isDataInserted = sharedPreferences.getBoolean("isDummyDataInserted", false)
-
-        if (!isDataInserted) {
-            // Insert dummy data
-            val startDate = LocalDate.of(2024, 1, 1)
-            val endDate = LocalDate.of(2024, 12, 10)
-            var currentDate = startDate
-
-            while (!currentDate.isAfter(endDate)) {
-                // Generate a randomized list of HabitStatus
-                val sampleHabits = listOf(
-                    HabitStatus(
-                        "97-11effaad-1b8a-486d-b594-ca6092008de0",
-                        "a",
-                        Random.nextBoolean()
-                    ),
-                    HabitStatus(
-                        "98-b424e3ec-9386-4836-96b3-af3846c930a5",
-                        "b",
-                        Random.nextBoolean()
-                    ),
-                    HabitStatus(
-                        "99-ff218df0-d41d-4427-98bc-eb75b04f4a3b",
-                        "c",
-                        Random.nextBoolean()
-                    ),
-                    HabitStatus(
-                        "100-ce5d5c28-b416-424b-bc7d-bac1d872f6c9",
-                        "d",
-                        Random.nextBoolean()
-                    ),
-                    HabitStatus(
-                        "3154295-d555125b-c7e8-4e97-811c-5119c70b2d46",
-                        "fuck",
-                        Random.nextBoolean()
-                    )
-                )
-
-                // Count the number of habits marked as true
-                val habitCompleted = sampleHabits.count { it.habitStatus }
-
-                // Create a HabitData object
-                val habitData = HabitData(
-                    date = currentDate,
-                    habitStatus = sampleHabits,
-                    habitCompleted = habitCompleted
-                )
-
-                // Insert the data into the database using ViewModel
-                viewModel.insertHabitData(habitData)
-
-                // Move to the next day
-                currentDate = currentDate.plusDays(1)
-            }
-
-            // Mark data as inserted in SharedPreferences
-            sharedPreferences.edit().putBoolean("isDummyDataInserted", true).apply()
-        }
     }
 }

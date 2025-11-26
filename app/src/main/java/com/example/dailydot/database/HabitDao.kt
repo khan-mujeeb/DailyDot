@@ -6,6 +6,7 @@ import com.example.dailydot.data.Habit
 
 @Dao
 interface HabitDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit)
 
@@ -15,7 +16,7 @@ interface HabitDao {
     @Query("SELECT * FROM habit_table")
     suspend fun getAllHabitsList(): List<Habit>
 
-    @Delete(entity = Habit::class)
+    @Delete
     suspend fun deleteHabit(habit: Habit)
 
     @Query("UPDATE habit_table SET habitName = :habitName WHERE uid = :habitId")

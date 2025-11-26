@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "265351779091",
+    "firebase_url": "https://sickpredict-default-rtdb.firebaseio.com",
+    "project_id": "sickpredict",
+    "storage_bucket": "sickpredict.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:265351779091:android:25b2b4f94d8865478500e6",
+        "android_client_info": {
+          "package_name": "com.example.dailydot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBO4LdFaSp77zNuVlaN0bfk6d7-PPWe7zs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:265351779091:android:cc5f33a9c2e410c98500e6",
+        "android_client_info": {
+          "package_name": "com.example.sickpredict"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBO4LdFaSp77zNuVlaN0bfk6d7-PPWe7zs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

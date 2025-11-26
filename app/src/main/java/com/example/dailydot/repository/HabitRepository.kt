@@ -10,53 +10,35 @@ import java.time.LocalDate
 
 class HabitRepository(application: Application) {
 
-    private val habitDao = HabitDatabase.getDatabase(application).habitDao()
-    private val habitDataDao = HabitDatabase.getDatabase(application).habitDataDao()
+    private val db = HabitDatabase.getDatabase(application)
+    private val habitDao = db.habitDao()
+    private val habitDataDao = db.habitDataDao()
+
+    // Habit list
+    suspend fun insertHabit(habit: Habit) = habitDao.insertHabit(habit)
+    suspend fun deleteHabit(habit: Habit) = habitDao.deleteHabit(habit)
+    fun getAllHabits(): LiveData<List<Habit>> = habitDao.getAllHabits()
+    suspend fun updateHabit(habit: Habit) = habitDao.updateHabit(habit.uid, habit.habitName)
+    suspend fun getAllHabitsList(): List<Habit> = habitDao.getAllHabitsList()
 
 
-//    **********************************************************************************************
-//                                          habit tracking  Data
-//    **********************************************************************************************
+    // Habit tracking data
+    suspend fun insertHabitData(habitData: HabitData) = habitDataDao.insertHabitData(habitData)
 
-    suspend fun insertHabitData(habitData: HabitData) {
-        habitDataDao.insertHabitData(habitData)
-    }
+    suspend fun updateHabitData(
+        date: LocalDate,
+        habitStatus: List<HabitStatus>,
+        habitCompleted: Int
+    ) = habitDataDao.updateHabitData(date, habitStatus, habitCompleted)
 
-    suspend fun updateHabitData(date: LocalDate, habitStatus: List<HabitStatus>, habitCompleted: Int) {
-        habitDataDao.updateHabitData(date, habitStatus, habitCompleted)
-    }
+    fun getHabitDataByDate(date: LocalDate): LiveData<HabitData?> =
+        habitDataDao.getHabitDataByDate(date)
 
-    suspend fun getHabitsByDate(date: LocalDate): LiveData<HabitData> {
-        return habitDataDao.getHabitsByDate(date)
-    }
+    fun getAllHabitTrackingData(): LiveData<List<HabitData>> =
+        habitDataDao.getAllHabitData()
 
-    fun getAllHabitTrackingData(): LiveData<List<HabitData>> {
-        return habitDataDao.getAllHabits()
-    }
+    suspend fun getOnceHabitsByDate(date: LocalDate): HabitData? =
+        habitDataDao.getOnceHabitsByDate(date)
 
 
-
-//    **********************************************************************************************
-//                                          habit Data
-//    **********************************************************************************************
-    suspend fun insertHabit(habit: Habit) {
-        habitDao.insertHabit(habit)
-    }
-
-    suspend fun deleteHabit(habit: Habit) {
-        habitDao.deleteHabit(habit)
-    }
-
-    fun getAllHabits(): LiveData<List<Habit>> {
-        return habitDao.getAllHabits()
-    }
-
-    suspend fun updateHabit(habit: Habit) {
-        habitDao.updateHabit(habit.uid, habit.habitName)
-
-    }
-
-    suspend fun getOnceHabitsByDate(date: LocalDate): HabitData {
-        return habitDataDao.getOnceHabitsByDate(date)
-    }
 }

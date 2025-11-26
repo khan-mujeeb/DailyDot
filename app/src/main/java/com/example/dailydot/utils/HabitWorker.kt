@@ -10,39 +10,34 @@ import java.time.LocalDate
 
 class HabitWorker(appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
-    override suspend fun doWork(): Result {
-        val habitDao = HabitDatabase.getDatabase(applicationContext).habitDao()
-        val habitDataDao = HabitDatabase.getDatabase(applicationContext).habitDataDao()
 
+    override suspend fun doWork(): Result {
+        val db = HabitDatabase.getDatabase(applicationContext)
+        val habitDao = db.habitDao()
+        val habitDataDao = db.habitDataDao()
 
         val currentDate = LocalDate.now()
+
+        // Avoid inserting duplicate record for same date
+        val existing = habitDataDao.getOnceHabitsByDate(currentDate)
+        if (existing != null) return Result.success()
+
         val habits = habitDao.getAllHabitsList()
-        val habitStatusList = mutableListOf<HabitStatus>()
-
-
-
-
-        // Create a list of habit status for the current date and mark all habits as incomplete
-        habits.forEach { habit ->
-            habitStatusList.add(
-                HabitStatus(
-                    uid = habit.uid, habitName = habit.habitName, habitStatus = false
-                )
+        val habitStatusList = habits.map { habit ->
+            HabitStatus(
+                uid = habit.uid,
+                habitName = habit.habitName,
+                habitStatus = false
             )
         }
 
-        // Insert the habit data for the current date
-        habitDataDao.insertHabitData(
-            HabitData(
-                id = 0,
-                date = currentDate,
-                habitStatus = habitStatusList,
-                habitCompleted = 0
-            )
+        val habitData = HabitData(
+            date = currentDate,
+            habitStatus = habitStatusList,
+            habitCompleted = 0
         )
 
-
-
+        habitDataDao.insertHabitData(habitData)
 
         return Result.success()
     }

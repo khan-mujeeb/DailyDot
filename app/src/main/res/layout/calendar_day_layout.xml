@@ -23,7 +23,6 @@
     <View
 
         android:background="@color/active_text_color"
-        android:layout_marginTop="-8dp"
         android:id="@+id/markerView"
         android:layout_width="13dp"
         android:layout_height="2dp"/>

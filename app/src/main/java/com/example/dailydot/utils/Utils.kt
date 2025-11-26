@@ -20,10 +20,10 @@ import com.example.dailydot.R
 import com.example.dailydot.adapter.HabitAdapter
 import com.example.dailydot.data.ActionType
 import com.example.dailydot.data.Habit
+import com.example.dailydot.data.HabitData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.viewmodel.HabitViewModel
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.util.UUID
 
 object Utils {
@@ -88,10 +88,8 @@ object Utils {
         // Show the dialog
 
 
-
         return loaderDialog
     }
-
 
 
     // ******************************************************************************************
@@ -103,12 +101,10 @@ object Utils {
         viewModel: HabitViewModel,
         lifecycleOwner: LifecycleOwner
     ) {
-        // Inflate the dialog layout
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_habit, null)
         val etHabitName = dialogView.findViewById<EditText>(R.id.etHabitName)
         val btnAddHabit = dialogView.findViewById<Button>(R.id.btnAddHabit)
 
-        // Create and show the dialog
         val dialog = AlertDialog.Builder(context)
             .setView(dialogView)
             .create()
@@ -116,33 +112,32 @@ object Utils {
         btnAddHabit.setOnClickListener {
             val habitName = etHabitName.text.toString().trim()
 
-            if (habitName.isNotEmpty()) {
-
-                // Add the habit to the database using ViewModel
-                val newHabit = Habit(
-                    uid = generateRandomUID(habitName),
-                    habitName = habitName
-                )
-
-                viewModel.insertHabit(newHabit)
-
-                lifecycleOwner.lifecycleScope.launch {
-
-
-                    val habits = viewModel.getOnceHabitsByDate(LocalDate.now())
-                    viewModel.addNewHabitSetupData(newHabit, habits)
-
-                }
-
-                // Dismiss the dialog
-                dialog.dismiss()
-            } else {
+            if (habitName.isEmpty()) {
                 etHabitName.error = "Habit name cannot be empty"
+                return@setOnClickListener
             }
+
+            val newHabit = com.example.dailydot.data.Habit(
+                uid = generateRandomUID(habitName),
+                habitName = habitName
+            )
+
+            // 1) Insert into habit_table
+            viewModel.insertHabit(newHabit)
+
+            // 2) Make sure today's HabitData exists and includes this new habit
+            lifecycleOwner.lifecycleScope.launch {
+                viewModel.ensureTodayHabitDataIncludes(newHabit)
+            }
+
+            Toast.makeText(context, "Habit added", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
         }
 
         dialog.show()
     }
+
+
 
 
     // ******************************************************************************************
