@@ -143,13 +143,13 @@ object Utils {
     // ******************************************************************************************
     //                  This function will show a dialog to edit and delete  a habit
     // ******************************************************************************************
-
     @SuppressLint("InflateParams", "MissingInflatedId")
     fun showEditDeleteHabitPopup(
         binding: ActivityMainBinding,
         context: Context,
         viewModel: HabitViewModel,
         habit: Habit,
+        habitData: HabitData,
         x: Float,
         y: Float
     ) {
@@ -161,7 +161,6 @@ object Utils {
 
         tvHabitName.text = habit.habitName
 
-        // Create PopupWindow
         val popupWindow = PopupWindow(
             popupView,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -169,23 +168,57 @@ object Utils {
             true
         )
 
-        // Handle button clicks
+        // --------- EDIT HABIT NAME ----------
         btnEditHabit.setOnClickListener {
-
-            viewModel.updateHabit(habit)
-            Toast.makeText(context, "Habit updated", Toast.LENGTH_SHORT).show()
             popupWindow.dismiss()
+
+            val editText = EditText(context).apply {
+                setText(habit.habitName)
+                setSelection(text.length)
+            }
+
+            AlertDialog.Builder(context)
+                .setTitle("Edit habit")
+                .setView(editText)
+                .setPositiveButton("Save") { dialog, _ ->
+                    val newName = editText.text.toString().trim()
+                    if (newName.isNotEmpty()) {
+                        // Update both Habit and HabitData for this day
+                        viewModel.editHabitNameForDay(habit, newName, habitData)
+                        Toast.makeText(context, "Habit updated", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
+                    }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
         }
 
+        // --------- DELETE HABIT ----------
         btnDeleteHabit.setOnClickListener {
-            viewModel.deleteHabit(habit)
-            Toast.makeText(context, "Habit deleted", Toast.LENGTH_SHORT).show()
-            popupWindow.dismiss()
+            AlertDialog.Builder(context)
+                .setTitle("Delete habit")
+                .setMessage("Are you sure you want to delete this habit?")
+                .setPositiveButton("Delete") { dialog, _ ->
+                    // This removes from Habit table + today's HabitData
+                    viewModel.deleteHabitAndUpdateTracking(habit, habitData)
+                    Toast.makeText(context, "Habit deleted", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                    popupWindow.dismiss()
+                }
+                .setNegativeButton("Cancel") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
         }
 
-        // Show the PopupWindow at the specified position
+        // Show the popup at touch position
         popupWindow.showAtLocation(binding.root, Gravity.NO_GRAVITY, x.toInt(), y.toInt())
     }
+
 
 
     // ******************************************************************************************

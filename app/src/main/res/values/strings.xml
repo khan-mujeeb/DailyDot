@@ -5,4 +5,14 @@
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
     <string name="add_icon">add icon</string>
+    <string name="add_habit">Add Habit</string>
+    <string name="save">SAVE</string>
+    <string name="close">Close</string>
+    <string name="habit_name">Name</string>
+    <string name="habit_name_hint">Habit name</string>
+    <string name="preview">Preview</string>
+    <string name="color">Color</string>
+    <string name="icon">Icon</string>
+    <string name="habit_tip">Tiny steps every day beat big plans someday.</string>
+
 </resources>

@@ -64,4 +64,5 @@
     <color name="foreground_color">#fff</color>
 
     <color name="date_text_resource">#fff</color>
+    <color name="red_700">#D32F2F</color>
 </resources>

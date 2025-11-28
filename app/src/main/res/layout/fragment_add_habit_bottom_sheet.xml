@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootAddHabit"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="?attr/colorSurface">
+
+    <!-- Header row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/btnClose"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/outline_arrow_left_alt_24"
+             />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/add_habit"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingHorizontal="8dp" />
+
+        <TextView
+            android:id="@+id/btnSave"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/save"
+            android:textStyle="bold"
+            android:textColor="@color/teal_200"
+            android:enabled="false"
+            android:alpha="0.4" />
+    </LinearLayout>
+
+    <!-- Name -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/habit_name"
+        android:textSize="14sp"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/etHabitName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/habit_name_hint"
+        android:inputType="textCapSentences"
+        android:padding="8dp"
+        android:background="@drawable/bg_edittext" />
+
+    <!-- Preview -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/preview"
+        android:textSize="14sp"
+        android:layout_marginTop="16dp" />
+
+    <LinearLayout
+        android:id="@+id/previewContainer"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_preview_card">
+
+        <ImageView
+            android:id="@+id/ivPreviewIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_icon_circle"
+            android:padding="6dp"
+            android:src="@drawable/ic_habit_default"
+            android:tint="@android:color/white" />
+
+        <TextView
+            android:id="@+id/tvPreviewName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@string/habit_name_hint"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Color row -->
+    <LinearLayout
+        android:id="@+id/rowColor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/color"
+            android:textSize="14sp" />
+
+        <View
+            android:id="@+id/viewSelectedColor"
+            android:layout_width="40dp"
+            android:layout_height="20dp"
+            android:background="@drawable/bg_color_swatch" />
+    </LinearLayout>
+
+    <!-- Icon row -->
+    <LinearLayout
+        android:id="@+id/rowIcon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/icon"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/btnIconPicker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/ivSelectedIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_habit_default"
+                android:tint="@android:color/white"
+                android:background="@drawable/bg_icon_circle" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="4dp"
+                android:src="@drawable/ic_arrow_drop_down_24" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Tiny note -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/habit_tip"
+        android:textSize="12sp"
+        android:alpha="0.7"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp" />
+
+</LinearLayout>

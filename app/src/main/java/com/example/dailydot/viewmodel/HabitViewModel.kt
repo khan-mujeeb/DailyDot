@@ -13,7 +13,8 @@ import kotlin.math.max
 
 class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
-    // Habits
+    // ---------------- HABITS (MASTER LIST) ----------------
+
     fun insertHabit(habit: Habit) = viewModelScope.launch {
         repository.insertHabit(habit)
     }
@@ -28,12 +29,20 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         repository.updateHabit(habit)
     }
 
-    // HabitData
+    // Return full list once (not LiveData)
+    suspend fun getAllHabitsList(): List<Habit> = repository.getAllHabitsList()
+
+    // ---------------- HABIT TRACKING (PER DAY) ----------------
+
     fun insertHabitData(habitData: HabitData) = viewModelScope.launch {
         repository.insertHabitData(habitData)
     }
 
-    fun updateHabitData(date: LocalDate, habitStatus: List<HabitStatus>, habitCompleted: Int) {
+    fun updateHabitData(
+        date: LocalDate,
+        habitStatus: List<HabitStatus>,
+        habitCompleted: Int
+    ) {
         viewModelScope.launch {
             repository.updateHabitData(date, habitStatus, habitCompleted)
         }
@@ -48,7 +57,8 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     suspend fun getOnceHabitsByDate(date: LocalDate): HabitData? =
         repository.getOnceHabitsByDate(date)
 
-    // checkbox helpers
+    // ---------------- CHECKBOX HELPERS ----------------
+
     fun addHabitToCompleted(habit: HabitStatus, result: HabitData) {
         val updatedStatus = result.habitStatus.map {
             if (it.uid == habit.uid) it.copy(habitStatus = true) else it
@@ -65,68 +75,16 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         updateHabitData(result.date, updatedStatus, newCompleted)
     }
 
-    // in HabitViewModel.kt
-
-    suspend fun ensureTodayHabitDataIncludes(newHabit: Habit) {
-        val today = LocalDate.now()
-
-        // Is there already HabitData for today?
-        val existing: HabitData? = repository.getOnceHabitsByDate(today)
-
-        if (existing == null) {
-            // No row yet: create a fresh HabitData from ALL current habits
-            val allHabits = repository.getAllHabitsList()
-            if (allHabits.isEmpty()) return
-
-            val statuses = allHabits.map {
-                HabitStatus(
-                    uid = it.uid,
-                    habitName = it.habitName,
-                    habitStatus = false
-                )
-            }
-
-            val habitData = HabitData(
-                date = today,
-                habitStatus = statuses,
-                habitCompleted = 0
-            )
-            repository.insertHabitData(habitData)
-        } else {
-            // Row exists: just add new habit to status list if not already present
-            val updatedStatuses = existing.habitStatus.toMutableList()
-
-            val alreadyPresent = updatedStatuses.any { it.uid == newHabit.uid }
-            if (!alreadyPresent) {
-                updatedStatuses.add(
-                    HabitStatus(
-                        uid = newHabit.uid,
-                        habitName = newHabit.habitName,
-                        habitStatus = false
-                    )
-                )
-
-                repository.updateHabitData(
-                    date = today,
-                    habitStatus = updatedStatuses,
-                    habitCompleted = existing.habitCompleted
-                )
-            }
-        }
-    }
+    // ---------------- CREATE TODAY'S HABITDATA IF NEEDED ----------------
 
     suspend fun createTodayHabitDataIfMissing() {
         val today = LocalDate.now()
-
-        // Check if there is already HabitData for today
         val existing: HabitData? = repository.getOnceHabitsByDate(today)
-        if (existing != null) return  // already created, nothing to do
+        if (existing != null) return
 
-        // Fetch all habits
-        val allHabits: List<Habit> = repository.getAllHabitsList()
-        if (allHabits.isEmpty()) return // no habits yet, so no tracking row needed
+        val allHabits = repository.getAllHabitsList()
+        if (allHabits.isEmpty()) return
 
-        // Build status list: all habits, all unchecked
         val statuses = allHabits.map { habit ->
             HabitStatus(
                 uid = habit.uid,
@@ -142,5 +100,93 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         )
 
         repository.insertHabitData(habitData)
+    }
+
+    // ---------------- ENSURE TODAY HAS NEW HABIT ----------------
+
+    suspend fun ensureTodayHabitDataIncludes(newHabit: Habit) {
+        val today = LocalDate.now()
+        val existing: HabitData? = repository.getOnceHabitsByDate(today)
+
+        if (existing == null) {
+            // No row, create from all habits
+            val allHabits = repository.getAllHabitsList()
+            if (allHabits.isEmpty()) return
+
+            val statuses = allHabits.map { habit ->
+                HabitStatus(
+                    uid = habit.uid,
+                    habitName = habit.habitName,
+                    habitStatus = false
+                )
+            }
+
+            val habitData = HabitData(
+                date = today,
+                habitStatus = statuses,
+                habitCompleted = 0
+            )
+            repository.insertHabitData(habitData)
+        } else {
+            // Row exists: add this habit if missing
+            val updatedStatuses = existing.habitStatus.toMutableList()
+            val alreadyPresent = updatedStatuses.any { it.uid == newHabit.uid }
+
+            if (!alreadyPresent) {
+                updatedStatuses.add(
+                    HabitStatus(
+                        uid = newHabit.uid,
+                        habitName = newHabit.habitName,
+                        habitStatus = false
+                    )
+                )
+
+                repository.updateHabitData(
+                    date = existing.date,
+                    habitStatus = updatedStatuses,
+                    habitCompleted = existing.habitCompleted
+                )
+            }
+        }
+    }
+
+    // ---------------- NEW: EDIT + DELETE WITH TRACKING UPDATE ----------------
+
+    fun editHabitNameForDay(habit: Habit, newName: String, habitData: HabitData) {
+        viewModelScope.launch {
+            // 1) update Habit in master table
+            val updatedHabit = habit.copy(habitName = newName)
+            repository.updateHabit(updatedHabit)
+
+            // 2) update this day's HabitData list
+            val updatedStatuses = habitData.habitStatus.map {
+                if (it.uid == habit.uid) it.copy(habitName = newName) else it
+            }
+
+            val newCompleted = updatedStatuses.count { it.habitStatus }
+
+            repository.updateHabitData(
+                date = habitData.date,
+                habitStatus = updatedStatuses,
+                habitCompleted = newCompleted
+            )
+        }
+    }
+
+    fun deleteHabitAndUpdateTracking(habit: Habit, habitData: HabitData) {
+        viewModelScope.launch {
+            // 1) remove from master table
+            repository.deleteHabit(habit)
+
+            // 2) remove from this day's HabitData.status list
+            val updatedStatuses = habitData.habitStatus.filter { it.uid != habit.uid }
+            val newCompleted = updatedStatuses.count { it.habitStatus }
+
+            repository.updateHabitData(
+                date = habitData.date,
+                habitStatus = updatedStatuses,
+                habitCompleted = newCompleted
+            )
+        }
     }
 }

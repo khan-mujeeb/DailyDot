@@ -1,35 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
     app:cardCornerRadius="10dp"
-
     android:backgroundTint="@color/foreground_color"
-    android:layout_marginBottom="10dp"
-    android:layout_height="70dp">
+    android:layout_marginBottom="10dp">
 
     <LinearLayout
-        android:gravity="center_vertical"
-        android:paddingHorizontal="32dp"
-        android:layout_gravity="center"
-        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <ImageView
-            android:src="@drawable/baseline_check_box_24"
-            android:id="@+id/habitStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp">
 
         <TextView
             android:id="@+id/habitTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:textSize="18sp"
             android:textColor="@color/active_text_color"
             android:text="@string/reading"
-            android:lines="1"
-            android:layout_marginStart="27dp"/>
+            android:lines="1" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cvHabitCompletionStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/green_700"
+            app:cardCornerRadius="8dp">
+
+            <TextView
+                android:id="@+id/tvHabitCompletionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Completed"
+                android:textSize="16sp"
+                android:textColor="@color/white"
+                android:layout_marginHorizontal="6dp"
+                android:layout_marginVertical="3dp"/>
+        </androidx.cardview.widget.CardView>
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>
