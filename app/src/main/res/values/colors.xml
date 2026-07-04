@@ -55,6 +55,7 @@
     <color name="heatmap_color_3">#5CB85C</color>
     <color name="heatmap_color_4">#3D8B37</color>
 
+    <color name="card_bg">#1AFFFFFF</color>
 
     // ui color constants
     <color name="inactive_text_color">#BEBEBE</color>
@@ -62,6 +63,7 @@
     <color name="header_text_color">#000</color>
     <color name="background_color">#F5F5F5</color>
     <color name="foreground_color">#fff</color>
+    <color name="card_stroke">#E5E7EB</color>
 
     <color name="date_text_resource">#fff</color>
     <color name="red_700">#D32F2F</color>

@@ -7,5 +7,8 @@ import androidx.room.PrimaryKey
 data class Habit(
     @PrimaryKey
     val uid: String,          // unique ID
-    val habitName: String     // title shown in UI
+    val habitName: String,   // title shown in UI
+    val habitIcon: Int,   // example → R.drawable.ic_menu_book
+    val habitColor: Int   // example → R.color.teal_200
+
 )

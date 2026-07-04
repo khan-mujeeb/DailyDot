@@ -22,10 +22,11 @@ import com.example.dailydot.adapter.PastHabitAdapter
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.repository.HabitRepository
+import com.example.dailydot.utils.AddHabitBottomSheet
 import com.example.dailydot.utils.HabitWorker
+import com.example.dailydot.utils.HabitStatsCalculator
 import com.example.dailydot.utils.Utils
 import com.example.dailydot.utils.Utils.getHabitCompletionImageResource
-import com.example.dailydot.utils.Utils.showAddHabitDialog
 import com.example.dailydot.utils.Utils.showLoaderDialog
 import com.example.dailydot.viewmodel.HabitViewModel
 import com.example.dailydot.viewmodel.HabitViewModelFactory
@@ -54,6 +55,8 @@ class MainActivity : AppCompatActivity() {
     private var habitCount: Int = 0
     private var habitByDate: Map<LocalDate, HabitData> = emptyMap()
     private lateinit var currentDate: LocalDate
+    private lateinit var calendarStartDate: LocalDate
+    private lateinit var calendarEndDate: LocalDate
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -77,6 +80,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeVariables() {
         currentDate = LocalDate.now()
+        val currentMonth = YearMonth.now()
+        calendarStartDate = currentMonth.minusMonths(12).atDay(1)
+        calendarEndDate = currentMonth.atEndOfMonth()
         loader = showLoaderDialog(this)
         loader.show()
     }
@@ -110,7 +116,8 @@ class MainActivity : AppCompatActivity() {
                 binding.habitRcView.adapter = HabitAdapter(
                     habitData = habitData,         // contains status + progress for today
                     habits = allHabits,            // master habit details (uid, name)
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    context = this@MainActivity
                 ) { habit, dayData, x, y ->        // callback when long-pressed
                     Utils.showEditDeleteHabitPopup(
                         binding = binding,
@@ -128,11 +135,33 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        // all habit tracking for heatmap calendar
-        viewModel.getAllHabitTrackingData().observe(this) { list ->
-            habitByDate = (list ?: emptyList()).associateBy { it.date }
+        // Load only the visible heatmap range instead of the whole history table.
+        viewModel.getHabitTrackingDataBetween(calendarStartDate, calendarEndDate).observe(this) { list ->
+            val trackingData = list ?: emptyList()
+            habitByDate = trackingData.associateBy { it.date }
+            updateStatsDashboard(trackingData)
             binding.calendarView.notifyCalendarChanged()
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun updateStatsDashboard(trackingData: List<HabitData>) {
+        val stats = HabitStatsCalculator.calculate(trackingData, currentDate)
+
+        binding.tvCurrentStreak.text = stats.currentStreak.toString()
+        binding.tvBestStreak.text = stats.bestStreak.toString()
+        binding.tvMonthCompletion.text = "${stats.monthCompletionPercent}%"
+        binding.tvTodaySummary.text =
+            if (stats.totalToday == 0) {
+                getString(R.string.today_summary_empty)
+            } else {
+                getString(
+                    R.string.today_summary_format,
+                    stats.completedToday,
+                    stats.totalToday,
+                    stats.perfectDaysThisMonth
+                )
+            }
     }
 
     // ------------------------------------------------------------------------
@@ -241,7 +270,8 @@ class MainActivity : AppCompatActivity() {
                     binding.habitRcView.adapter = HabitAdapter(
                         habitData = habitData,
                         habits = allHabits,     // <<<< REQUIRED
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        context = this@MainActivity
                     ) { habit, dayData, x, y ->
 
                         com.example.dailydot.utils.Utils.showEditDeleteHabitPopup(
@@ -275,17 +305,15 @@ class MainActivity : AppCompatActivity() {
     // CLICKS / FAB / ONBOARDING / WORKER
     // ------------------------------------------------------------------------
     private fun setupClickListeners() {
+
         binding.floatingAddButton.setOnClickListener {
             if (habitCount >= 4) {
                 Toast.makeText(this, "You can only add 4 habits", Toast.LENGTH_SHORT).show()
             } else {
-                showAddHabitDialog(
-                    context = this,
-                    viewModel = viewModel,
-                    lifecycleOwner = this
-                )
+                AddHabitBottomSheet().show(supportFragmentManager, "AddHabit")
             }
         }
+
     }
 
     private fun setupOnboarding() {

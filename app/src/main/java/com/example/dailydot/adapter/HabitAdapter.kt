@@ -1,20 +1,24 @@
 package com.example.dailydot.adapter
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.dailydot.R
 import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.data.HabitStatus
+import com.example.dailydot.utils.HabitIconStyler
 import com.example.dailydot.viewmodel.HabitViewModel
 
 class HabitAdapter(
+    private val context: Context,
     private val habitData: HabitData,
     private val habits: List<Habit>,  // master habit list
     private val viewModel: HabitViewModel,
@@ -24,6 +28,7 @@ class HabitAdapter(
     class HabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val checkBox: CheckBox = view.findViewById(R.id.habitCheckBox)
         val habitTitle: TextView = view.findViewById(R.id.habitTitle)
+        val icon: ImageView = view.findViewById(R.id.ivIcon)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HabitViewHolder {
@@ -39,7 +44,15 @@ class HabitAdapter(
         // Find corresponding Habit entity by uid
         val habitEntity: Habit? = habits.firstOrNull { it.uid == status.uid }
 
-        holder.habitTitle.text = status.habitName
+        val iconRes = habitEntity?.habitIcon ?: status.habitIcon.takeIf { it != 0 }
+        val colorRes = habitEntity?.habitColor ?: status.habitColor.takeIf { it != 0 }
+
+        holder.habitTitle.text = habitEntity?.habitName ?: status.habitName
+        HabitIconStyler.apply(
+            holder.icon,
+            iconRes ?: R.drawable.outline_add_box_24,
+            colorRes ?: R.color.teal_200
+        )
 
         // --- Checkbox setup ---
         holder.checkBox.setOnCheckedChangeListener(null)

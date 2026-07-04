@@ -1,36 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cardCornerRadius="10dp"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
 
-    android:backgroundTint="@color/foreground_color"
     android:layout_marginBottom="10dp"
-    android:layout_height="70dp">
+    android:backgroundTint="@color/foreground_color"
+    app:cardCornerRadius="10dp">
 
     <LinearLayout
-        android:gravity="center_vertical"
-        android:paddingHorizontal="20dp"
-        android:layout_gravity="center"
-        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingEnd="4dp"
+        android:paddingStart="20dp">
+
+        <ImageView
+            android:id="@+id/ivIcon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_icon_circle"
+            android:padding="6dp"
+            android:src="@drawable/outline_add_box_24"
+            app:tint="@android:color/white" />
+
+        <TextView
+            android:id="@+id/habitTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:lines="1"
+            android:layout_weight="1"
+            android:text="@string/reading"
+            android:textColor="@color/active_text_color"
+            android:textSize="16sp" />
+
         <CheckBox
 
             android:id="@+id/habitCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <TextView
-            android:id="@+id/habitTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textColor="@color/active_text_color"
-            android:text="@string/reading"
-            android:lines="1"
-
-            android:layout_marginStart="15dp"/>
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

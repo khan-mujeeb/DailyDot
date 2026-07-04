@@ -34,6 +34,9 @@ interface HabitDataDao {
     suspend fun getOnceHabitsByDate(date: LocalDate): HabitData?
 
 
+    @Query("SELECT * FROM habit_tracking_table WHERE date BETWEEN :startDate AND :endDate")
+    fun getHabitDataBetween(startDate: LocalDate, endDate: LocalDate): LiveData<List<HabitData>>
+
     @Query("SELECT * FROM habit_tracking_table")
     fun getAllHabitData(): LiveData<List<HabitData>>
 }

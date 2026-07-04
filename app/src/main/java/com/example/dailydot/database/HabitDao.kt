@@ -7,8 +7,14 @@ import com.example.dailydot.data.Habit
 @Dao
 interface HabitDao {
 
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit)
+
+    @Query("UPDATE habit_table SET habitName = :name, habitIcon = :icon, habitColor = :color WHERE uid = :id")
+    suspend fun updateHabit(id: String, name: String, icon: Int, color: Int)
+
+
 
     @Query("SELECT * FROM habit_table")
     fun getAllHabits(): LiveData<List<Habit>>

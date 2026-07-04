@@ -3,9 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootAddHabit"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="18dp"
     android:background="?attr/colorSurface">
 
     <!-- Header row -->
@@ -19,6 +20,7 @@
             android:id="@+id/btnClose"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:tint="@color/active_text_color"
             android:src="@drawable/outline_arrow_left_alt_24"
              />
 
@@ -44,22 +46,6 @@
             android:alpha="0.4" />
     </LinearLayout>
 
-    <!-- Name -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/habit_name"
-        android:textSize="14sp"
-        android:layout_marginTop="16dp" />
-
-    <EditText
-        android:id="@+id/etHabitName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/habit_name_hint"
-        android:inputType="textCapSentences"
-        android:padding="8dp"
-        android:background="@drawable/bg_edittext" />
 
     <!-- Preview -->
     <TextView
@@ -67,39 +53,82 @@
         android:layout_height="wrap_content"
         android:text="@string/preview"
         android:textSize="14sp"
+        android:layout_marginBottom="5dp"
         android:layout_marginTop="16dp" />
 
-    <LinearLayout
-        android:id="@+id/previewContainer"
+
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="12dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_preview_card">
+        app:cardCornerRadius="10dp"
+        android:backgroundTint="@color/foreground_color"
+        android:layout_marginBottom="10dp"
+        android:layout_height="70dp">
 
-        <ImageView
-            android:id="@+id/ivPreviewIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@drawable/bg_icon_circle"
-            android:padding="6dp"
-            android:src="@drawable/ic_habit_default"
-            android:tint="@android:color/white" />
+        <LinearLayout
+            android:gravity="center_vertical"
+            android:paddingEnd="4dp"
+            android:paddingStart="20dp"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/tvPreviewName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:text="@string/habit_name_hint"
-            android:textSize="16sp" />
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/ivPreviewIcon"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_icon_circle"
+                android:padding="6dp"
+                android:src="@drawable/outline_add_box_24"
+                />
+
+            <TextView
+                android:layout_weight="1"
+                android:id="@+id/tvPreviewName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textColor="@color/active_text_color"
+                android:text="@string/reading"
+                android:lines="1"
+                android:layout_marginStart="15dp"/>
+
+
+            <CheckBox
+                android:clickable="false"
+                android:checked="true"
+                android:id="@+id/habitCheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+
+
+    <!-- Habit -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/habit"
+        android:textSize="14sp"
+        android:layout_marginBottom="5dp"
+
+        android:layout_marginTop="16dp" />
+
+    <!-- Name -->
+
+    <EditText
+        android:id="@+id/etHabitName"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="@string/habit_name_hint"
+        android:inputType="textCapSentences"
+        android:padding="8dp"
+        android:background="@drawable/bg_edittext" />
+
 
     <!-- Color row -->
     <LinearLayout
-        android:id="@+id/rowColor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -115,10 +144,24 @@
 
         <View
             android:id="@+id/viewSelectedColor"
-            android:layout_width="40dp"
-            android:layout_height="20dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_color_swatch" />
     </LinearLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/colorSwatchContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
 
     <!-- Icon row -->
     <LinearLayout
@@ -145,17 +188,13 @@
 
             <ImageView
                 android:id="@+id/ivSelectedIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_habit_default"
-                android:tint="@android:color/white"
-                android:background="@drawable/bg_icon_circle" />
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_icon_circle"
+                android:padding="6dp"
+                android:src="@drawable/outline_add_box_24" />
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="4dp"
-                android:src="@drawable/ic_arrow_drop_down_24" />
+
         </LinearLayout>
     </LinearLayout>
 
@@ -167,6 +206,7 @@
         android:textSize="12sp"
         android:alpha="0.7"
         android:layout_marginTop="16dp"
+        android:textAlignment="center"
         android:layout_marginBottom="8dp" />
 
 </LinearLayout>

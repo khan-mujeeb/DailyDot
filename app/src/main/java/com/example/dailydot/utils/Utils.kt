@@ -13,8 +13,8 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.dailydot.R
 import com.example.dailydot.adapter.HabitAdapter
@@ -23,7 +23,6 @@ import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.databinding.ActivityMainBinding
 import com.example.dailydot.viewmodel.HabitViewModel
-import kotlinx.coroutines.launch
 import java.util.UUID
 
 object Utils {
@@ -42,24 +41,24 @@ object Utils {
     fun getHabitCompletionImageResource(habitCompletionCount: Int, textView: TextView): Int {
         return when (habitCompletionCount) {
             0 -> {
-                textView.setTextColor(textView.resources.getColor(R.color.active_text_color))
+                textView.setTextColor(ContextCompat.getColor(textView.context, R.color.active_text_color))
                 R.drawable.heatmap_bg0
             }// No habit
             1 -> {
-                textView.setTextColor(textView.resources.getColor(R.color.date_text_resource))
+                textView.setTextColor(ContextCompat.getColor(textView.context, R.color.date_text_resource))
                 R.drawable.heatmap_bg1
             } // 1 habit completed
             2 -> {
-                textView.setTextColor(textView.resources.getColor(R.color.date_text_resource))
+                textView.setTextColor(ContextCompat.getColor(textView.context, R.color.date_text_resource))
                 R.drawable.heatmap_bg2
             } // 2 habit completed
             3 -> {
-                textView.setTextColor(textView.resources.getColor(R.color.date_text_resource))
+                textView.setTextColor(ContextCompat.getColor(textView.context, R.color.date_text_resource))
 
                 R.drawable.heatmap_bg3
             } // 3 habit completed
             4 -> {
-                textView.setTextColor(textView.resources.getColor(R.color.date_text_resource))
+                textView.setTextColor(ContextCompat.getColor(textView.context, R.color.date_text_resource))
 
                 R.drawable.heatmap_bg4
             }// 4 habit completed
@@ -119,16 +118,12 @@ object Utils {
 
             val newHabit = com.example.dailydot.data.Habit(
                 uid = generateRandomUID(habitName),
-                habitName = habitName
+                habitName = habitName,
+                habitIcon = R.drawable.outline_add_box_24,
+                habitColor = R.color.teal_200
             )
 
-            // 1) Insert into habit_table
-            viewModel.insertHabit(newHabit)
-
-            // 2) Make sure today's HabitData exists and includes this new habit
-            lifecycleOwner.lifecycleScope.launch {
-                viewModel.ensureTodayHabitDataIncludes(newHabit)
-            }
+            viewModel.addHabitAndEnsureTodayData(newHabit)
 
             Toast.makeText(context, "Habit added", Toast.LENGTH_SHORT).show()
             dialog.dismiss()

@@ -9,10 +9,19 @@
     <string name="save">SAVE</string>
     <string name="close">Close</string>
     <string name="habit_name">Name</string>
-    <string name="habit_name_hint">Habit name</string>
+    <string name="habit_name_hint">Reading</string>
     <string name="preview">Preview</string>
     <string name="color">Color</string>
     <string name="icon">Icon</string>
     <string name="habit_tip">Tiny steps every day beat big plans someday.</string>
+    <string name="habit">Habit Name</string>
+    <string name="current_streak">Current streak</string>
+    <string name="best_streak">Best streak</string>
+    <string name="month_score">Month score</string>
+    <string name="today_summary_empty">Add habits to start tracking today.</string>
+    <string name="today_summary_format">%1$d of %2$d done today • %3$d perfect days this month</string>
+    <string name="choose_color">Choose color</string>
+    <string name="search_habit_icons">Search habit icons</string>
+    <string name="templates">Templates</string>
 
 </resources>

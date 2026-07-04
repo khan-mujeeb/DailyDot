@@ -15,6 +15,10 @@ class HabitRepository(application: Application) {
     private val habitDataDao = db.habitDataDao()
 
     // Habit list
+
+//    suspend fun updateHabit(habit: Habit) =
+//        habitDao.updateHabit(habit.uid, habit.habitName, habit.habitIcon, habit.habitColor)
+
     suspend fun insertHabit(habit: Habit) = habitDao.insertHabit(habit)
     suspend fun deleteHabit(habit: Habit) = habitDao.deleteHabit(habit)
     fun getAllHabits(): LiveData<List<Habit>> = habitDao.getAllHabits()
@@ -36,6 +40,12 @@ class HabitRepository(application: Application) {
 
     fun getAllHabitTrackingData(): LiveData<List<HabitData>> =
         habitDataDao.getAllHabitData()
+
+    fun getHabitTrackingDataBetween(
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): LiveData<List<HabitData>> =
+        habitDataDao.getHabitDataBetween(startDate, endDate)
 
     suspend fun getOnceHabitsByDate(date: LocalDate): HabitData? =
         habitDataDao.getOnceHabitsByDate(date)

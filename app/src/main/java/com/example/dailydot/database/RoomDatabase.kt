@@ -14,11 +14,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(
-    entities = [Habit::class, HabitData::class],
-    version = 1,
-    exportSchema = false
-)
+@Database(entities = [Habit::class, HabitData::class], version = 3, exportSchema = false)
+
 @TypeConverters(LocalDateConverter::class, HabitStatusConverter::class)
 abstract class HabitDatabase : RoomDatabase() {
 
@@ -39,7 +36,7 @@ abstract class HabitDatabase : RoomDatabase() {
                     DB_NAME
                 )
                     // DEV ONLY: rebuild DB when schema changes
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)

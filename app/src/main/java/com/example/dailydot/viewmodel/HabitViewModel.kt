@@ -19,6 +19,11 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         repository.insertHabit(habit)
     }
 
+    fun addHabitAndEnsureTodayData(habit: Habit) = viewModelScope.launch {
+        repository.insertHabit(habit)
+        ensureTodayHabitDataIncludes(habit)
+    }
+
     fun getAllHabits(): LiveData<List<Habit>> = repository.getAllHabits()
 
     fun deleteHabit(habit: Habit) = viewModelScope.launch {
@@ -53,6 +58,12 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
     fun getAllHabitTrackingData(): LiveData<List<HabitData>> =
         repository.getAllHabitTrackingData()
+
+    fun getHabitTrackingDataBetween(
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): LiveData<List<HabitData>> =
+        repository.getHabitTrackingDataBetween(startDate, endDate)
 
     suspend fun getOnceHabitsByDate(date: LocalDate): HabitData? =
         repository.getOnceHabitsByDate(date)
@@ -89,7 +100,9 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
             HabitStatus(
                 uid = habit.uid,
                 habitName = habit.habitName,
-                habitStatus = false
+                habitStatus = false,
+                habitIcon = habit.habitIcon,
+                habitColor = habit.habitColor
             )
         }
 
@@ -117,7 +130,9 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                 HabitStatus(
                     uid = habit.uid,
                     habitName = habit.habitName,
-                    habitStatus = false
+                    habitStatus = false,
+                    habitIcon = habit.habitIcon,
+                    habitColor = habit.habitColor
                 )
             }
 
@@ -137,7 +152,9 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                     HabitStatus(
                         uid = newHabit.uid,
                         habitName = newHabit.habitName,
-                        habitStatus = false
+                        habitStatus = false,
+                        habitIcon = newHabit.habitIcon,
+                        habitColor = newHabit.habitColor
                     )
                 )
 

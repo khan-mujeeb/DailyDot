@@ -27,7 +27,9 @@ class HabitWorker(appContext: Context, workerParams: WorkerParameters) :
             HabitStatus(
                 uid = habit.uid,
                 habitName = habit.habitName,
-                habitStatus = false
+                habitStatus = false,
+                habitIcon = habit.habitIcon,
+                habitColor = habit.habitColor
             )
         }
 

@@ -5,22 +5,24 @@ import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.example.dailydot.MainActivity
 import com.example.dailydot.R
 import com.example.dailydot.data.HabitStatus
+import com.example.dailydot.utils.HabitIconStyler
 
 class PastHabitAdapter(
     private val context: Context,
-    private val habitStatuses: List<HabitStatus>
+    private val habitStatus: List<HabitStatus>
 ) : RecyclerView.Adapter<PastHabitAdapter.PastHabitViewHolder>() {
 
     class PastHabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val habitTitle: TextView = view.findViewById(R.id.habitTitle)
         val cvHabitStatus: View = view.findViewById(R.id.cvHabitCompletionStatus)
         val tvHabitStatus: TextView = view.findViewById(R.id.tvHabitCompletionStatus)
+        val ivIcon: ImageView = view.findViewById(R.id.ivPreviewIcon)
 
     }
 
@@ -31,14 +33,17 @@ class PastHabitAdapter(
     }
 
     override fun onBindViewHolder(holder: PastHabitViewHolder, position: Int) {
-        val status = habitStatuses[position]
+        val status = habitStatus[position]
 
-        //
         holder.habitTitle.text = status.habitName
-
+        HabitIconStyler.apply(
+            holder.ivIcon,
+            status.habitIcon,
+            status.habitColor
+        )
 
         // set status color and text
-        when(status.habitStatus) {
+        when (status.habitStatus) {
             true -> {
                 holder.cvHabitStatus.backgroundTintList = ColorStateList.valueOf(
                     ContextCompat.getColor(context, R.color.green_700)
@@ -54,5 +59,5 @@ class PastHabitAdapter(
         }
     }
 
-    override fun getItemCount(): Int = habitStatuses.size
+    override fun getItemCount(): Int = habitStatus.size
 }
