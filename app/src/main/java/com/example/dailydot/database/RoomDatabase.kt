@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
@@ -14,7 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Habit::class, HabitData::class], version = 3, exportSchema = false)
+@Database(entities = [Habit::class, HabitData::class], version = 4, exportSchema = false)
 
 @TypeConverters(LocalDateConverter::class, HabitStatusConverter::class)
 abstract class HabitDatabase : RoomDatabase() {
@@ -35,6 +36,7 @@ abstract class HabitDatabase : RoomDatabase() {
                     HabitDatabase::class.java,
                     DB_NAME
                 )
+                    .addMigrations(MIGRATION_3_4)
                     // DEV ONLY: rebuild DB when schema changes
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .addCallback(object : Callback() {
@@ -48,6 +50,17 @@ abstract class HabitDatabase : RoomDatabase() {
                     })
                     .build()
                     .also { INSTANCE = it }
+            }
+        }
+
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE habit_table ADD COLUMN goalTarget INTEGER NOT NULL DEFAULT 1"
+                )
+                db.execSQL(
+                    "ALTER TABLE habit_table ADD COLUMN goalUnit TEXT NOT NULL DEFAULT 'done'"
+                )
             }
         }
     }

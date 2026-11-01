@@ -10,6 +10,7 @@ import java.time.LocalDate
 
 class HabitRepository(application: Application) {
 
+    val applicationContext = application.applicationContext
     private val db = HabitDatabase.getDatabase(application)
     private val habitDao = db.habitDao()
     private val habitDataDao = db.habitDataDao()
@@ -22,7 +23,15 @@ class HabitRepository(application: Application) {
     suspend fun insertHabit(habit: Habit) = habitDao.insertHabit(habit)
     suspend fun deleteHabit(habit: Habit) = habitDao.deleteHabit(habit)
     fun getAllHabits(): LiveData<List<Habit>> = habitDao.getAllHabits()
-    suspend fun updateHabit(habit: Habit) = habitDao.updateHabit(habit.uid, habit.habitName)
+    suspend fun updateHabit(habit: Habit) =
+        habitDao.updateHabit(
+            habit.uid,
+            habit.habitName,
+            habit.habitIcon,
+            habit.habitColor,
+            habit.goalTarget,
+            habit.goalUnit
+        )
     suspend fun getAllHabitsList(): List<Habit> = habitDao.getAllHabitsList()
 
 

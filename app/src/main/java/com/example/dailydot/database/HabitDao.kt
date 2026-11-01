@@ -11,8 +11,8 @@ interface HabitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit)
 
-    @Query("UPDATE habit_table SET habitName = :name, habitIcon = :icon, habitColor = :color WHERE uid = :id")
-    suspend fun updateHabit(id: String, name: String, icon: Int, color: Int)
+    @Query("UPDATE habit_table SET habitName = :name, habitIcon = :icon, habitColor = :color, goalTarget = :goalTarget, goalUnit = :goalUnit WHERE uid = :id")
+    suspend fun updateHabit(id: String, name: String, icon: Int, color: Int, goalTarget: Int, goalUnit: String)
 
 
 
@@ -26,5 +26,5 @@ interface HabitDao {
     suspend fun deleteHabit(habit: Habit)
 
     @Query("UPDATE habit_table SET habitName = :habitName WHERE uid = :habitId")
-    suspend fun updateHabit(habitId: String, habitName: String)
+    suspend fun updateHabitName(habitId: String, habitName: String)
 }

@@ -126,6 +126,42 @@
         android:padding="8dp"
         android:background="@drawable/bg_edittext" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/goal"
+        android:textSize="14sp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/etGoalTarget"
+            android:layout_width="90dp"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_edittext"
+            android:hint="@string/goal_target_hint"
+            android:inputType="number"
+            android:maxLength="3"
+            android:padding="8dp"
+            android:text="1" />
+
+        <EditText
+            android:id="@+id/etGoalUnit"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_edittext"
+            android:hint="@string/goal_unit_hint"
+            android:inputType="textCapWords"
+            android:padding="8dp"
+            android:text="done" />
+    </LinearLayout>
 
     <!-- Color row -->
     <LinearLayout

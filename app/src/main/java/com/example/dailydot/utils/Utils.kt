@@ -120,7 +120,9 @@ object Utils {
                 uid = generateRandomUID(habitName),
                 habitName = habitName,
                 habitIcon = R.drawable.outline_add_box_24,
-                habitColor = R.color.teal_200
+                habitColor = R.color.teal_200,
+                goalTarget = 1,
+                goalUnit = "done"
             )
 
             viewModel.addHabitAndEnsureTodayData(newHabit)
@@ -151,6 +153,7 @@ object Utils {
         // Inflate the dialog layout
         val popupView = LayoutInflater.from(context).inflate(R.layout.threed_touch_popup, null)
         val btnEditHabit = popupView.findViewById<TextView>(R.id.editTextBtn)
+        val btnNoteHabit = popupView.findViewById<TextView>(R.id.noteTextBtn)
         val btnDeleteHabit = popupView.findViewById<TextView>(R.id.deleteTextBtn)
         val tvHabitName = popupView.findViewById<TextView>(R.id.tvHabitName)
 
@@ -184,6 +187,33 @@ object Utils {
                     } else {
                         Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
                     }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
+        }
+
+        btnNoteHabit.setOnClickListener {
+            popupWindow.dismiss()
+
+            val status = habitData.habitStatus.firstOrNull { it.uid == habit.uid }
+            val editText = EditText(context).apply {
+                setText(status?.note.orEmpty())
+                setSelection(text.length)
+                hint = "How did it go today?"
+                minLines = 3
+            }
+
+            AlertDialog.Builder(context)
+                .setTitle("Habit note")
+                .setView(editText)
+                .setPositiveButton("Save") { dialog, _ ->
+                    status?.let {
+                        viewModel.updateHabitNote(it, habitData, editText.text.toString())
+                    }
+                    Toast.makeText(context, "Note saved", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
                 .setNegativeButton("Cancel") { dialog, _ ->

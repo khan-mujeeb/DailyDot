@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.dailydot.R
 import com.example.dailydot.data.Habit
@@ -28,6 +29,8 @@ class HabitAdapter(
     class HabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val checkBox: CheckBox = view.findViewById(R.id.habitCheckBox)
         val habitTitle: TextView = view.findViewById(R.id.habitTitle)
+        val habitProgress: TextView = view.findViewById(R.id.tvHabitProgress)
+        val habitNote: TextView = view.findViewById(R.id.tvHabitNote)
         val icon: ImageView = view.findViewById(R.id.ivIcon)
     }
 
@@ -48,6 +51,13 @@ class HabitAdapter(
         val colorRes = habitEntity?.habitColor ?: status.habitColor.takeIf { it != 0 }
 
         holder.habitTitle.text = habitEntity?.habitName ?: status.habitName
+        val target = status.goalTarget.coerceAtLeast(1)
+        val displayedProgress = if (status.habitStatus) target else status.progress.coerceIn(0, target)
+        val goalUnit = status.goalUnit.orEmpty().ifBlank { "done" }
+        val note = status.note.orEmpty()
+        holder.habitProgress.text = "$displayedProgress/$target $goalUnit"
+        holder.habitNote.isVisible = note.isNotBlank()
+        holder.habitNote.text = note
         HabitIconStyler.apply(
             holder.icon,
             iconRes ?: R.drawable.outline_add_box_24,
@@ -68,8 +78,6 @@ class HabitAdapter(
 
         // --- Click row = toggle checkbox + animate ---
         holder.itemView.setOnClickListener { view ->
-            val newState = !holder.checkBox.isChecked
-
             // small click animation
             view.animate()
                 .scaleX(0.97f)
@@ -84,14 +92,12 @@ class HabitAdapter(
                 }
                 .start()
 
-            // avoid double-calls from checkbox listener
-            holder.checkBox.setOnCheckedChangeListener(null)
-            holder.checkBox.isChecked = newState
-
-            if (newState) {
-                viewModel.addHabitToCompleted(status, habitData)
-            } else {
+            if (holder.checkBox.isChecked) {
+                holder.checkBox.setOnCheckedChangeListener(null)
+                holder.checkBox.isChecked = false
                 viewModel.removeHabitFromCompleted(status, habitData)
+            } else {
+                viewModel.advanceHabitProgress(status, habitData)
             }
 
             holder.checkBox.setOnCheckedChangeListener { _, isChecked ->

@@ -29,7 +29,9 @@ class HabitWorker(appContext: Context, workerParams: WorkerParameters) :
                 habitName = habit.habitName,
                 habitStatus = false,
                 habitIcon = habit.habitIcon,
-                habitColor = habit.habitColor
+                habitColor = habit.habitColor,
+                goalTarget = habit.goalTarget.coerceAtLeast(1),
+                goalUnit = habit.goalUnit
             )
         }
 

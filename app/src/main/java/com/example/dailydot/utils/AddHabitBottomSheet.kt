@@ -28,6 +28,8 @@ class AddHabitBottomSheet : BottomSheetDialogFragment() {
     }
 
     private lateinit var etName: EditText
+    private lateinit var etGoalTarget: EditText
+    private lateinit var etGoalUnit: EditText
     private lateinit var btnSave: TextView
     private lateinit var btnClose: ImageView
     private lateinit var tvPreviewName: TextView
@@ -63,6 +65,8 @@ class AddHabitBottomSheet : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         etName = view.findViewById(R.id.etHabitName)
+        etGoalTarget = view.findViewById(R.id.etGoalTarget)
+        etGoalUnit = view.findViewById(R.id.etGoalUnit)
         btnSave = view.findViewById(R.id.btnSave)
         btnClose = view.findViewById(R.id.btnClose)
         tvPreviewName = view.findViewById(R.id.tvPreviewName)
@@ -176,7 +180,9 @@ class AddHabitBottomSheet : BottomSheetDialogFragment() {
             uid = generateRandomUID(habitName),
             habitName = habitName,
             habitIcon = selectedIconRes,
-            habitColor = selectedColorRes
+            habitColor = selectedColorRes,
+            goalTarget = etGoalTarget.text.toString().toIntOrNull()?.coerceAtLeast(1) ?: 1,
+            goalUnit = etGoalUnit.text.toString().trim().ifBlank { "done" }
         )
 
         viewModel.addHabitAndEnsureTodayData(newHabit)

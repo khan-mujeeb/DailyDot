@@ -9,6 +9,8 @@ data class Habit(
     val uid: String,          // unique ID
     val habitName: String,   // title shown in UI
     val habitIcon: Int,   // example → R.drawable.ic_menu_book
-    val habitColor: Int   // example → R.color.teal_200
+    val habitColor: Int,   // example → R.color.teal_200
+    val goalTarget: Int = 1,
+    val goalUnit: String = "done"
 
 )

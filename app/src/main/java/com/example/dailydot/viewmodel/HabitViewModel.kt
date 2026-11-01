@@ -7,9 +7,9 @@ import com.example.dailydot.data.Habit
 import com.example.dailydot.data.HabitData
 import com.example.dailydot.data.HabitStatus
 import com.example.dailydot.repository.HabitRepository
+import com.example.dailydot.widget.WidgetUpdater
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import kotlin.math.max
 
 class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
@@ -22,6 +22,7 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     fun addHabitAndEnsureTodayData(habit: Habit) = viewModelScope.launch {
         repository.insertHabit(habit)
         ensureTodayHabitDataIncludes(habit)
+        WidgetUpdater.refresh(repository.applicationContext)
     }
 
     fun getAllHabits(): LiveData<List<Habit>> = repository.getAllHabits()
@@ -50,6 +51,7 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     ) {
         viewModelScope.launch {
             repository.updateHabitData(date, habitStatus, habitCompleted)
+            WidgetUpdater.refresh(repository.applicationContext)
         }
     }
 
@@ -72,18 +74,50 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
     fun addHabitToCompleted(habit: HabitStatus, result: HabitData) {
         val updatedStatus = result.habitStatus.map {
-            if (it.uid == habit.uid) it.copy(habitStatus = true) else it
+            if (it.uid == habit.uid) {
+                val target = it.goalTarget.coerceAtLeast(1)
+                it.copy(habitStatus = true, progress = target)
+            } else {
+                it
+            }
         }
-        val newCompleted = result.habitCompleted + 1
+        val newCompleted = updatedStatusesCompletedCount(updatedStatus)
         updateHabitData(result.date, updatedStatus, newCompleted)
     }
 
     fun removeHabitFromCompleted(habit: HabitStatus, result: HabitData) {
         val updatedStatus = result.habitStatus.map {
-            if (it.uid == habit.uid) it.copy(habitStatus = false) else it
+            if (it.uid == habit.uid) it.copy(habitStatus = false, progress = 0) else it
         }
-        val newCompleted = max(result.habitCompleted - 1, 0)
+        val newCompleted = updatedStatusesCompletedCount(updatedStatus)
         updateHabitData(result.date, updatedStatus, newCompleted)
+    }
+
+    fun advanceHabitProgress(habit: HabitStatus, result: HabitData) {
+        val updatedStatus = result.habitStatus.map {
+            if (it.uid == habit.uid) {
+                val target = it.goalTarget.coerceAtLeast(1)
+                val newProgress = (it.progress + 1).coerceAtMost(target)
+                it.copy(progress = newProgress, habitStatus = newProgress >= target)
+            } else {
+                it
+            }
+        }
+        updateHabitData(result.date, updatedStatus, updatedStatusesCompletedCount(updatedStatus))
+    }
+
+    fun updateHabitNote(habit: HabitStatus, habitData: HabitData, note: String) {
+        viewModelScope.launch {
+            val updatedStatuses = habitData.habitStatus.map {
+                if (it.uid == habit.uid) it.copy(note = note.trim()) else it
+            }
+            repository.updateHabitData(
+                date = habitData.date,
+                habitStatus = updatedStatuses,
+                habitCompleted = updatedStatusesCompletedCount(updatedStatuses)
+            )
+            WidgetUpdater.refresh(repository.applicationContext)
+        }
     }
 
     // ---------------- CREATE TODAY'S HABITDATA IF NEEDED ----------------
@@ -102,7 +136,9 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                 habitName = habit.habitName,
                 habitStatus = false,
                 habitIcon = habit.habitIcon,
-                habitColor = habit.habitColor
+                habitColor = habit.habitColor,
+                goalTarget = habit.goalTarget.coerceAtLeast(1),
+                goalUnit = habit.goalUnit
             )
         }
 
@@ -132,7 +168,9 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                     habitName = habit.habitName,
                     habitStatus = false,
                     habitIcon = habit.habitIcon,
-                    habitColor = habit.habitColor
+                    habitColor = habit.habitColor,
+                    goalTarget = habit.goalTarget.coerceAtLeast(1),
+                    goalUnit = habit.goalUnit
                 )
             }
 
@@ -154,7 +192,9 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                         habitName = newHabit.habitName,
                         habitStatus = false,
                         habitIcon = newHabit.habitIcon,
-                        habitColor = newHabit.habitColor
+                        habitColor = newHabit.habitColor,
+                        goalTarget = newHabit.goalTarget.coerceAtLeast(1),
+                        goalUnit = newHabit.goalUnit
                     )
                 )
 
@@ -187,6 +227,7 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                 habitStatus = updatedStatuses,
                 habitCompleted = newCompleted
             )
+            WidgetUpdater.refresh(repository.applicationContext)
         }
     }
 
@@ -204,6 +245,10 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                 habitStatus = updatedStatuses,
                 habitCompleted = newCompleted
             )
+            WidgetUpdater.refresh(repository.applicationContext)
         }
     }
+
+    private fun updatedStatusesCompletedCount(statuses: List<HabitStatus>): Int =
+        statuses.count { it.habitStatus }
 }

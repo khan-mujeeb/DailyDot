@@ -23,5 +23,16 @@
     <string name="choose_color">Choose color</string>
     <string name="search_habit_icons">Search habit icons</string>
     <string name="templates">Templates</string>
+    <string name="note">Note</string>
+    <string name="goal">Goal</string>
+    <string name="goal_unit_hint">times, pages, glasses</string>
+    <string name="goal_target_hint">1</string>
+    <string name="widget_description">Shows today’s habit progress.</string>
+    <string name="widget_empty">Add habits to begin</string>
+    <string name="widget_progress_format">%1$d of %2$d done</string>
+    <string name="widget_complete">Today is complete</string>
+    <string name="widget_prompt">Tap to check in</string>
+    <string name="widget_preview_progress">0 of 0 done</string>
+    <string name="widget_preview_message">Open to check in</string>
 
 </resources>
