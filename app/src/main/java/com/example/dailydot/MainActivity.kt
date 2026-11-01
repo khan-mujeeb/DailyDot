@@ -65,11 +65,13 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.habitRcView.itemAnimator = null
+        binding.bottomNavigation.selectedItemId = R.id.navigation_home
 
         initializeViewModel()
         initializeVariables()
         setupUI()
         setupClickListeners()
+        setupBottomNavigation()
         scheduleHabitWorker()
     }
 
@@ -161,6 +163,20 @@ class MainActivity : AppCompatActivity() {
         binding.tvCurrentStreak.text = stats.currentStreak.toString()
         binding.tvBestStreak.text = stats.bestStreak.toString()
         binding.tvMonthCompletion.text = "${stats.monthCompletionPercent}%"
+        binding.tvWeeklyConsistency.text = getString(
+            R.string.weekly_score_format,
+            stats.weeklyCompletionPercent
+        )
+        binding.tvActiveDays.text = getString(
+            R.string.active_days_format,
+            stats.activeDaysThisWeek
+        )
+        binding.tvPerfectDays.text = getString(
+            R.string.perfect_days_format,
+            stats.perfectDaysThisMonth
+        )
+        binding.tvMostConsistentHabit.text = stats.mostConsistentHabit
+            ?: getString(R.string.no_habit_data)
         binding.tvTodaySummary.text =
             if (stats.totalToday == 0) {
                 getString(R.string.today_summary_empty)
@@ -308,6 +324,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    }
+
+    private fun setupBottomNavigation() {
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            val showHome = item.itemId == R.id.navigation_home
+            binding.homeContent.visibility = if (showHome) View.VISIBLE else View.GONE
+            binding.statsContent.visibility = if (showHome) View.GONE else View.VISIBLE
+            binding.floatingAddButton.visibility = if (showHome) View.VISIBLE else View.GONE
+            true
+        }
     }
 
     private fun setupOnboarding() {

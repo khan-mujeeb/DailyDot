@@ -78,7 +78,7 @@ object Utils {
 
         // Find the ImageView in the inflated view
         val loaderImageView = dialogView.findViewById<ImageView>(R.id.ivLoader)
-        Glide.with(context).asGif().load(R.drawable.fidget).into(loaderImageView)
+        Glide.with(context).asGif().load(R.drawable.loading).into(loaderImageView)
 
         // Create AlertDialog
         val loaderDialog = AlertDialog.Builder(context)

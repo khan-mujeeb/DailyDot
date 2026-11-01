@@ -22,7 +22,7 @@
     <string name="today_summary_format">%1$d of %2$d done today • %3$d perfect days this month</string>
     <string name="choose_color">Choose color</string>
     <string name="search_habit_icons">Search habit icons</string>
-    <string name="templates">Templates</string>
+    <string name="templates">ICONS</string>
     <string name="note">Note</string>
     <string name="goal">Goal</string>
     <string name="goal_unit_hint">times, pages, glasses</string>
@@ -40,5 +40,16 @@
     <string name="habit_note_title">Habit note</string>
     <string name="habit_note_description">A brief reflection for today.</string>
     <string name="habit_note_hint">How did it go today?</string>
+    <string name="home">Home</string>
+    <string name="stats">Stats</string>
+    <string name="weekly_consistency">Weekly consistency</string>
+    <string name="active_days">Active days</string>
+    <string name="perfect_days">Perfect days</string>
+    <string name="top_habit">Most consistent</string>
+    <string name="no_habit_data">Complete habits to see your strongest routine.</string>
+    <string name="weekly_score_format">%1$d%% in the last 7 days</string>
+    <string name="active_days_format">%1$d of 7 days</string>
+    <string name="perfect_days_format">%1$d this month</string>
+    <string name="select">Select</string>
 
 </resources>
