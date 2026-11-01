@@ -20,11 +20,15 @@ import com.example.dailydot.viewmodel.HabitViewModel
 
 class HabitAdapter(
     private val context: Context,
-    private val habitData: HabitData,
-    private val habits: List<Habit>,  // master habit list
+    private var habitData: HabitData,
+    private var habits: List<Habit>,  // master habit list
     private val viewModel: HabitViewModel,
     private val onHabitLongPress: (Habit, HabitData, Float, Float) -> Unit, // (habit, dayData, x, y)
 ) : RecyclerView.Adapter<HabitAdapter.HabitViewHolder>() {
+
+    init {
+        setHasStableIds(true)
+    }
 
     class HabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val checkBox: CheckBox = view.findViewById(R.id.habitCheckBox)
@@ -130,4 +134,15 @@ class HabitAdapter(
     }
 
     override fun getItemCount(): Int = habitData.habitStatus.size
+
+    override fun getItemId(position: Int): Long =
+        habitData.habitStatus[position].uid.hashCode().toLong()
+
+    fun updateData(habitData: HabitData, habits: List<Habit>) {
+        this.habitData = habitData
+        this.habits = habits
+        notifyDataSetChanged()
+    }
+
+    fun currentHabitData(): HabitData = habitData
 }

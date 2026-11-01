@@ -34,5 +34,11 @@
     <string name="widget_prompt">Tap to check in</string>
     <string name="widget_preview_progress">0 of 0 done</string>
     <string name="widget_preview_message">Open to check in</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit_habit_title">Edit habit</string>
+    <string name="edit_habit_description">Keep the name short and easy to spot.</string>
+    <string name="habit_note_title">Habit note</string>
+    <string name="habit_note_description">A brief reflection for today.</string>
+    <string name="habit_note_hint">How did it go today?</string>
 
 </resources>

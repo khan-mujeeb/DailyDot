@@ -64,6 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.habitRcView.itemAnimator = null
 
         initializeViewModel()
         initializeVariables()
@@ -101,33 +102,17 @@ class MainActivity : AppCompatActivity() {
         viewModel.getAllHabits().observe(this) { habits ->
             habitCount = habits?.size ?: 0
             allHabits = habits ?: emptyList()
-        }
-
-
-        // track total count (for limiting add to 4)
-        viewModel.getAllHabits().observe(this) { habits ->
-            habitCount = habits?.size ?: 0
+            (binding.habitRcView.adapter as? HabitAdapter)?.let { adapter ->
+                val currentData = adapter.currentHabitData()
+                adapter.updateData(currentData, allHabits)
+            }
         }
 
         // today’s habit data for list
         viewModel.getHabitDataByDate(currentDate).observe(this) { habitData ->
             loader.dismiss()
             if (habitData != null) {
-                binding.habitRcView.adapter = HabitAdapter(
-                    habitData = habitData,         // contains status + progress for today
-                    habits = allHabits,            // master habit details (uid, name)
-                    viewModel = viewModel,
-                    context = this@MainActivity
-                ) { habit, dayData, x, y ->        // callback when long-pressed
-                    Utils.showEditDeleteHabitPopup(
-                        binding = binding,
-                        context = this,
-                        viewModel = viewModel,
-                        habit = habit,             // <- which habit user long pressed
-                        habitData = dayData,       // <- today's HabitData to update
-                        x = x, y = y               // <- popup position
-                    )
-                }
+                showTodayHabits(habitData)
             } else {
                 binding.habitRcView.adapter = null
                 Toast.makeText(this, "no data found", Toast.LENGTH_SHORT).show()
@@ -141,6 +126,31 @@ class MainActivity : AppCompatActivity() {
             habitByDate = trackingData.associateBy { it.date }
             updateStatsDashboard(trackingData)
             binding.calendarView.notifyCalendarChanged()
+        }
+    }
+
+    private fun showTodayHabits(habitData: HabitData) {
+        val existingAdapter = binding.habitRcView.adapter as? HabitAdapter
+        if (existingAdapter != null) {
+            existingAdapter.updateData(habitData, allHabits)
+            return
+        }
+
+        binding.habitRcView.adapter = HabitAdapter(
+            habitData = habitData,
+            habits = allHabits,
+            viewModel = viewModel,
+            context = this
+        ) { habit, dayData, x, y ->
+            Utils.showEditDeleteHabitPopup(
+                binding = binding,
+                context = this,
+                viewModel = viewModel,
+                habit = habit,
+                habitData = dayData,
+                x = x,
+                y = y
+            )
         }
     }
 
@@ -267,23 +277,7 @@ class MainActivity : AppCompatActivity() {
             if (selectedDate == LocalDate.now()) {
 
                 if (habitData != null) {
-                    binding.habitRcView.adapter = HabitAdapter(
-                        habitData = habitData,
-                        habits = allHabits,     // <<<< REQUIRED
-                        viewModel = viewModel,
-                        context = this@MainActivity
-                    ) { habit, dayData, x, y ->
-
-                        com.example.dailydot.utils.Utils.showEditDeleteHabitPopup(
-                            binding = binding,
-                            context = this,
-                            viewModel = viewModel,
-                            habit = habit,
-                            habitData = dayData,
-                            x = x,
-                            y = y
-                        )
-                    }
+                    showTodayHabits(habitData)
 
                 } else binding.habitRcView.adapter = null
 

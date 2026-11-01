@@ -2,6 +2,8 @@ package com.example.dailydot.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -170,56 +172,40 @@ object Utils {
         btnEditHabit.setOnClickListener {
             popupWindow.dismiss()
 
-            val editText = EditText(context).apply {
-                setText(habit.habitName)
-                setSelection(text.length)
+            showHabitInputDialog(
+                context = context,
+                title = context.getString(R.string.edit_habit_title),
+                description = context.getString(R.string.edit_habit_description),
+                initialText = habit.habitName,
+                hint = context.getString(R.string.habit_name_hint),
+                multiline = false
+            ) { newName ->
+                if (newName.isNotEmpty()) {
+                    viewModel.editHabitNameForDay(habit, newName, habitData)
+                    Toast.makeText(context, "Habit updated", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
+                }
             }
-
-            AlertDialog.Builder(context)
-                .setTitle("Edit habit")
-                .setView(editText)
-                .setPositiveButton("Save") { dialog, _ ->
-                    val newName = editText.text.toString().trim()
-                    if (newName.isNotEmpty()) {
-                        // Update both Habit and HabitData for this day
-                        viewModel.editHabitNameForDay(habit, newName, habitData)
-                        Toast.makeText(context, "Habit updated", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
-                    }
-                    dialog.dismiss()
-                }
-                .setNegativeButton("Cancel") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
         }
 
         btnNoteHabit.setOnClickListener {
             popupWindow.dismiss()
 
             val status = habitData.habitStatus.firstOrNull { it.uid == habit.uid }
-            val editText = EditText(context).apply {
-                setText(status?.note.orEmpty())
-                setSelection(text.length)
-                hint = "How did it go today?"
-                minLines = 3
+            showHabitInputDialog(
+                context = context,
+                title = context.getString(R.string.habit_note_title),
+                description = context.getString(R.string.habit_note_description),
+                initialText = status?.note.orEmpty(),
+                hint = context.getString(R.string.habit_note_hint),
+                multiline = true
+            ) { note ->
+                status?.let {
+                    viewModel.updateHabitNote(it, habitData, note)
+                }
+                Toast.makeText(context, "Note saved", Toast.LENGTH_SHORT).show()
             }
-
-            AlertDialog.Builder(context)
-                .setTitle("Habit note")
-                .setView(editText)
-                .setPositiveButton("Save") { dialog, _ ->
-                    status?.let {
-                        viewModel.updateHabitNote(it, habitData, editText.text.toString())
-                    }
-                    Toast.makeText(context, "Note saved", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
-                }
-                .setNegativeButton("Cancel") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
         }
 
         // --------- DELETE HABIT ----------
@@ -242,6 +228,43 @@ object Utils {
 
         // Show the popup at touch position
         popupWindow.showAtLocation(binding.root, Gravity.NO_GRAVITY, x.toInt(), y.toInt())
+    }
+
+    private fun showHabitInputDialog(
+        context: Context,
+        title: String,
+        description: String,
+        initialText: String,
+        hint: String,
+        multiline: Boolean,
+        onSave: (String) -> Unit
+    ) {
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_habit_input, null)
+        val titleView = dialogView.findViewById<TextView>(R.id.tvInputTitle)
+        val descriptionView = dialogView.findViewById<TextView>(R.id.tvInputDescription)
+        val input = dialogView.findViewById<EditText>(R.id.etHabitInput)
+        val cancel = dialogView.findViewById<TextView>(R.id.btnInputCancel)
+        val save = dialogView.findViewById<TextView>(R.id.btnInputSave)
+
+        titleView.text = title
+        descriptionView.text = description
+        input.apply {
+            setText(initialText)
+            setSelection(text.length)
+            this.hint = hint
+            minLines = if (multiline) 3 else 1
+            maxLines = if (multiline) 5 else 1
+            isSingleLine = !multiline
+        }
+
+        val dialog = AlertDialog.Builder(context).setView(dialogView).create()
+        cancel.setOnClickListener { dialog.dismiss() }
+        save.setOnClickListener {
+            onSave(input.text.toString().trim())
+            dialog.dismiss()
+        }
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
     }
 
 
